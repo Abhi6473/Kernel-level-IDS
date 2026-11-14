@@ -377,13 +377,3 @@ make unload IFACE=eth0
 | `Link has no XDP support` | Driver does not support native `xdpdrv` | Pass `xdpgeneric` (SKB mode) to `bpf/load_pipeline.sh <iface> xdpgeneric`. |
 | `Cannot find bpftool` | Kernel tools not installed | Install matching package: `sudo apt-get install -y linux-tools-$(uname -r)`. |
 | `Verification failed on non-Linux` | Host is macOS / Windows | macOS does not run Linux kernel BPF code; run live XDP commands inside an Ubuntu VM or container. Python tests run on any OS. |
-
----
-
-## 6. License & Academic Attribution
-
-This project is submitted for the Advanced Operating Systems / USP Course Term Project.
-
-If you use or reference AHHS-IDS in your research, please cite:
-1. **Zhang et al. (DSN 2024)**: *Chained eBPF Tail Calls for High-Throughput In-Kernel Packet Processing*.
-2. **Sharafaldin, I., et al. (2018)**: *Toward Generating a New Intrusion Detection Dataset and Intrusion Traffic Characterization*. Canadian Institute for Cybersecurity (CIC-IDS-2017).
