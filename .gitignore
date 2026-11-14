@@ -33,3 +33,5 @@ ahhs_loader
 .idea/
 *.swp
 *~
+ahhs_model.bin
+ahhs_loader

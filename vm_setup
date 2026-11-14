@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =========================================================================
-# vm_setup_and_run.sh - Automated AHHS-IDS Launcher for defender-vm
+# vm_setup - Automated AHHS-IDS Launcher for defender-vm
 # =========================================================================
 set -e
 
