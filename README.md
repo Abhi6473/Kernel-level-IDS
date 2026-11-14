@@ -1,11 +1,15 @@
 # AHHS-IDS: Adaptive Hybrid Hardware-Software Intrusion Detection System
 ## Multi-Tier In-Kernel eBPF/XDP Deep Learning Security Architecture
 
+
+
 [![Kernel](https://img.shields.io/badge/Linux_Kernel-%E2%89%A55.10-blue.svg)](https://kernel.org)
 [![eBPF](https://img.shields.io/badge/eBPF-XDP-orange.svg)](https://ebpf.io)
 [![Dataset](https://img.shields.io/badge/Dataset-CIC--IDS--2017-green.svg)](https://www.unb.ca/cic/datasets/ids-2017.html)
 [![Bit Parity](https://img.shields.io/badge/Golden_Parity-240%2F240_(100%25)-purple.svg)](models/golden_tier3.json)
 [![Detection](https://img.shields.io/badge/Detection_Rate-85.07%25-brightgreen.svg)](models/evaluation_summary.json)
+
+
 
 **Course Term Project** — *Advanced Operating Systems / USP Project*  
 **Authors:**
@@ -19,16 +23,22 @@
 
 **AHHS-IDS** is a high-performance network intrusion detection system executed entirely inside the Linux kernel data path using **eBPF (Extended Berkeley Packet Filter)** and **XDP (eXpress Data Path)**.
 
+
+
 Existing kernel-level IDSes face a severe architectural dilemma:
 1. **Static In-Kernel Filters (e.g., bpfilter)**: Execute at wire speed ($10\text{--}12\text{ ns}$), but provide **0% protection against zero-day or behavioral shifts**.
 2. **Monolithic Per-Packet ML (e.g., Lucid-XDP)**: Running neural networks on every packet collapses single-core throughput to **$\approx 1.2\text{ Mpps}$** (>95% of packets are dropped at 40 Gbps, causing a self-inflicted DoS).
 3. **Hybrid RingBuffer Offload (e.g., Falco, Tetragon)**: Pushing packet events to userspace introduces a **$5\text{ to }50\text{ ms}$ reaction delay**, allowing **over 300,000 attack packets into the host** before a rule can be applied.
+
+
 
 AHHS-IDS breaks this deadlock through **hierarchical stateful amortization**:
 - **Tier 1 (Stateless Wire-Speed Pre-Filter)**: A branchless C decision tree classifying known ports in **$11.8\text{ ns}$** ($O(1)$) directly at NIC driver ingress, resolving ~90% of traffic.
 - **Tier 2 (Stateful LRU Sliding Window)**: An LRU hash map (`flow_lru_map`, 65,536 capacity) tracking connection states and accumulating flow statistics over 100 packets or 1.0 second in **$45\text{ ns}$**.
 - **Tier 3 (Deep In-Kernel Quantized Autoencoder)**: A 4-program, tail-call-chained neural network ($8 \to 16 \to 4 \to 16 \to 8$, 428 parameters, 592 bytes) running pure integer $Q_{24}$ arithmetic without floating-point registers. Amortized cost is just **$3.42\text{ ns}$ per packet**.
 - **Immediate In-Kernel Quarantine**: Anomalous flows ($\text{err} > \theta$) are inserted into an in-kernel blocklist (`ahhs_blocklist`) with a 60-second TTL in **$< 1\text{ }\mu\text{s}$**, ensuring **0 attack packets breach the host**.
+
+
 
 ### Key Empirical Results on Official CIC-IDS-2017 Dataset
 
@@ -255,6 +265,7 @@ sudo bash bpf/load_pipeline.sh eth0 xdpgeneric
 6. Attaches `xdp_ahhs_tier1` directly to the interface via XDP hook.
 
 ---
+
 
 ### Step 5: Verify Active In-Kernel Telemetry & Maps
 
