@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AHHS-IDS ARCHITECTURE</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              emerald: '#10B981',
+              rose: '#F43F5E',
+              amber: '#F59E0B',
+              purple: '#A855F7'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Roboto', 'system-ui', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes glow-emerald {
+      0% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.9); border-color: #10B981; transform: scale(1.02); }
+      100% { box-shadow: 0 0 0px transparent; border-color: #334155; transform: scale(1); }
+    }
+    @keyframes glow-rose {
+      0% { box-shadow: 0 0 40px rgba(244, 63, 94, 0.9); border-color: #F43F5E; transform: scale(1.02); }
+      100% { box-shadow: 0 0 0px transparent; border-color: #334155; transform: scale(1); }
+    }
+    @keyframes glow-amber {
+      0% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.9); border-color: #F59E0B; transform: scale(1.02); }
+      100% { box-shadow: 0 0 0px transparent; border-color: #334155; transform: scale(1); }
+    }
+    @keyframes glow-purple {
+      0% { box-shadow: 0 0 55px rgba(168, 85, 247, 1); border-color: #A855F7; transform: scale(1.03); background-color: rgba(168, 85, 247, 0.2); }
+      50% { box-shadow: 0 0 35px rgba(168, 85, 247, 0.8); border-color: #C084FC; }
+      100% { box-shadow: 0 0 0px transparent; border-color: #334155; transform: scale(1); background-color: rgba(30, 41, 59, 0.4); }
+    }
+    .flash-emerald { animation: glow-emerald 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .flash-rose { animation: glow-rose 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .flash-amber { animation: glow-amber 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .flash-purple { animation: glow-purple 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    /* Moving packet dot */
+    .packet-dot {
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Exploding particle */
+    .explode-particle {
+      position: fixed;
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: explode 0.5s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+    }
+
+    /* Animated connector pulses */
+    @keyframes pulse-line {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+    .flow-line {
+      animation: pulse-line 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans select-none antialiased">
+
+  <!-- Packet Animation Container Overlay -->
+  <div id="packet-layer" class="fixed inset-0 pointer-events-none z-50"></div>
+
+  <!-- Top Header -->
+  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur px-8 py-5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-3.5 h-3.5 rounded-full bg-emerald-400 shadow-[0_0_12px_#10B981] animate-pulse"></div>
+        <h1 class="text-xl md:text-2xl font-black tracking-widest text-white uppercase">
+          AHHS-IDS ARCHITECTURE
+        </h1>
+        <span class="hidden sm:inline-block px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 ml-2">
+          PHASE 3 AUTOENCODER (θ = 20)
+        </span>
+      </div>
+      <button id="btn-reset" class="px-4 py-1.5 rounded-xl text-xs font-bold tracking-widest bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all active:scale-95 uppercase">
+        RESET
+      </button>
+    </div>
+  </header>
+
+  <!-- Main 3-Column Visual Grid -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+
+    <!-- ================================================================= -->
+    <!-- COLUMN 1: INGRESS (Left) -->
+    <!-- ================================================================= -->
+    <div class="lg:col-span-4 flex flex-col">
+      <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 flex-1 flex flex-col justify-between shadow-2xl">
+        
+        <div>
+          <!-- Panel Header -->
+          <h2 class="text-xs font-bold tracking-widest text-slate-400 uppercase mb-6 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            INGRESS
+          </h2>
+
+          <!-- 3 Flow Action Buttons -->
+          <div class="space-y-4">
+            
+            <!-- Benign Button -->
+            <button id="btn-benign" class="w-full py-4 px-5 rounded-xl border border-emerald-500/40 bg-slate-900/80 hover:bg-emerald-950/40 hover:border-emerald-400 active:scale-[0.98] transition-all flex items-center justify-between group shadow-lg hover:shadow-emerald-500/10">
+              <span class="text-sm font-extrabold tracking-wider text-emerald-400 flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#10B981] group-hover:scale-125 transition-transform"></span>
+                BENIGN (HTTP/443)
+              </span>
+              <span class="text-xs font-mono text-emerald-400 font-bold tracking-wider uppercase opacity-75 group-hover:opacity-100">&rarr; PASS</span>
+            </button>
+
+            <!-- Malicious Button -->
+            <button id="btn-malicious" class="w-full py-4 px-5 rounded-xl border border-rose-500/40 bg-slate-900/80 hover:bg-rose-950/40 hover:border-rose-500 active:scale-[0.98] transition-all flex items-center justify-between group shadow-lg hover:shadow-rose-500/10">
+              <span class="text-sm font-extrabold tracking-wider text-rose-500 flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_#F43F5E] group-hover:scale-125 transition-transform"></span>
+                MALICIOUS (PORT 4444)
+              </span>
+              <span class="text-xs font-mono text-rose-500 font-bold tracking-wider uppercase opacity-75 group-hover:opacity-100">&rarr; DROP</span>
+            </button>
+
+            <!-- Ambiguous Button -->
+            <button id="btn-ambiguous" class="w-full py-4 px-5 rounded-xl border border-amber-500/40 bg-slate-900/80 hover:bg-amber-950/40 hover:border-amber-400 active:scale-[0.98] transition-all flex items-center justify-between group shadow-lg hover:shadow-amber-500/10">
+              <span class="text-sm font-extrabold tracking-wider text-amber-400 flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_10px_#F59E0B] group-hover:scale-125 transition-transform"></span>
+                AMBIGUOUS (PORT 8080)
+              </span>
+              <span class="text-xs font-mono text-amber-400 font-bold tracking-wider uppercase opacity-75 group-hover:opacity-100">&rarr; TIER 2/3</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Ingress Controls & Last Packet Block -->
+        <div class="mt-8 space-y-4">
+          
+          <!-- Auto Stream Toggle -->
+          <div class="p-3.5 bg-slate-900/90 rounded-xl border border-slate-700/80 flex items-center justify-between">
+            <span class="text-xs font-extrabold tracking-wider text-slate-300 uppercase">
+              AUTO-STREAM
+            </span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="toggle-stream" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+            </label>
+          </div>
+
+          <!-- Monospace Packet Header Block -->
+          <div class="p-3.5 bg-slate-900/90 rounded-xl border border-slate-700/80 font-mono text-xs text-center tracking-wider text-slate-300" id="packet-block">
+            SRC: 192.168.1.104 | DST: 80
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- COLUMN 2: eBPF PIPELINE (Center) -->
+    <!-- ================================================================= -->
+    <div class="lg:col-span-4 flex flex-col">
+      <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 flex-1 flex flex-col justify-between shadow-2xl relative">
+        
+        <!-- Panel Header -->
+        <h2 class="text-xs font-bold tracking-widest text-slate-400 uppercase mb-4 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+          eBPF PIPELINE
+        </h2>
+
+        <!-- Nodes Vertical Flowchart -->
+        <div class="flex-1 flex flex-col justify-around items-center py-2 relative">
+
+          <!-- ------------------------------------------------------------- -->
+          <!-- NODE 1: TIER 1 -->
+          <!-- ------------------------------------------------------------- -->
+          <div id="node-tier1" class="w-full bg-slate-900/90 rounded-xl border border-slate-700 p-5 text-center transition-all duration-300 relative shadow-xl">
+            <div class="text-sm md:text-base font-extrabold tracking-widest text-white uppercase">
+              TIER 1: ML PRE-FILTER
+            </div>
+            <div class="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-1">
+              WIRE-SPEED DECISION TREE (O(1))
+            </div>
+          </div>
+
+          <!-- Animated Connector Line 1 -->
+          <div class="w-1 h-10 bg-gradient-to-b from-slate-600 via-amber-500 to-amber-500 rounded-full flow-line shadow-[0_0_8px_#F59E0B]"></div>
+
+          <!-- ------------------------------------------------------------- -->
+          <!-- NODE 2: TIER 2 -->
+          <!-- ------------------------------------------------------------- -->
+          <div id="node-tier2" class="w-full bg-slate-900/90 rounded-xl border border-slate-700 p-4 text-center transition-all duration-300 shadow-xl">
+            <div class="text-sm md:text-base font-extrabold tracking-widest text-white uppercase mb-1">
+              TIER 2: LRU SLIDING WINDOW
+            </div>
+            <div class="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-3">
+              5-TUPLE ACCUMULATORS &amp; FEATURES
+            </div>
+            
+            <!-- Clean 5-Segment Visual Progress Bar -->
+            <div class="grid grid-cols-5 gap-2 max-w-xs mx-auto">
+              <div id="seg-1" class="h-3 rounded-full bg-slate-800 border border-slate-700 transition-all duration-300"></div>
+              <div id="seg-2" class="h-3 rounded-full bg-slate-800 border border-slate-700 transition-all duration-300"></div>
+              <div id="seg-3" class="h-3 rounded-full bg-slate-800 border border-slate-700 transition-all duration-300"></div>
+              <div id="seg-4" class="h-3 rounded-full bg-slate-800 border border-slate-700 transition-all duration-300"></div>
+              <div id="seg-5" class="h-3 rounded-full bg-slate-800 border border-slate-700 transition-all duration-300"></div>
+            </div>
+          </div>
+
+          <!-- Animated Connector Line 2 (Tail Call) -->
+          <div class="w-1 h-10 bg-gradient-to-b from-amber-500 via-purple-500 to-purple-500 rounded-full flow-line shadow-[0_0_8px_#A855F7]"></div>
+
+          <!-- ------------------------------------------------------------- -->
+          <!-- NODE 3: TIER 3 (Phase 3 Chained Autoencoder) -->
+          <!-- ------------------------------------------------------------- -->
+          <div id="node-tier3" class="w-full bg-slate-900/40 rounded-xl border border-slate-800 opacity-40 p-4 text-center transition-all duration-500 shadow-xl">
+            <div class="text-xs md:text-sm font-extrabold tracking-widest text-slate-300 uppercase">
+              TIER 3: QUANTIZED AUTOENCODER
+            </div>
+            <div class="text-[10px] font-mono text-purple-400 uppercase tracking-widest mt-0.5">
+              4-LAYER CHAIN: 8 &rarr; 16 &rarr; 4 &rarr; 16 &rarr; 8
+            </div>
+            <!-- Dynamic Reconstruction Error Banner -->
+            <div id="tier3-err-banner" class="hidden text-xs font-mono font-bold mt-2 pt-2 border-t border-purple-500/30 text-rose-400">
+              RECON ERR: <span id="val-recon-err">1904</span> &gt; &theta;:20 &rarr; ANOMALY!
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- COLUMN 3: TELEMETRY (Right) -->
+    <!-- ================================================================= -->
+    <div class="lg:col-span-4 flex flex-col">
+      <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 flex-1 flex flex-col justify-between shadow-2xl gap-5">
+        
+        <!-- Panel Header -->
+        <h2 class="text-xs font-bold tracking-widest text-slate-400 uppercase flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            TELEMETRY
+          </span>
+          <span class="font-mono text-[10px] text-emerald-400">KERNEL 6.8 LIVE</span>
+        </h2>
+
+        <!-- MAP 1: tier1_stats_map -->
+        <div class="bg-slate-900/90 rounded-xl border border-slate-700 p-4 shadow-inner">
+          <div class="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase mb-2">
+            tier1_stats_map
+          </div>
+          
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <!-- PASS -->
+            <div>
+              <div id="val-pass" class="text-2xl md:text-3xl font-black font-mono text-emerald-400 transition-transform">
+                0
+              </div>
+              <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
+                PASS
+              </div>
+            </div>
+
+            <!-- DROP -->
+            <div>
+              <div id="val-drop" class="text-2xl md:text-3xl font-black font-mono text-rose-500 transition-transform">
+                0
+              </div>
+              <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
+                DROP
+              </div>
+            </div>
+
+            <!-- TIER 2 -->
+            <div>
+              <div id="val-ambiguous" class="text-2xl md:text-3xl font-black font-mono text-amber-400 transition-transform">
+                0
+              </div>
+              <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
+                TIER 2
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAP 2: flow_lru_map -->
+        <div class="bg-slate-900/90 rounded-xl border border-slate-700 p-4 shadow-inner">
+          <div class="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase mb-2">
+            flow_lru_map
+          </div>
+
+          <!-- Minimalist 3-column table -->
+          <div class="font-mono text-xs">
+            <div class="grid grid-cols-12 text-slate-400 font-bold uppercase tracking-wider pb-1.5 border-b border-slate-700 text-[11px]">
+              <div class="col-span-6">FLOW KEY</div>
+              <div class="col-span-3 text-right">PKTS</div>
+              <div class="col-span-3 text-right">BYTES</div>
+            </div>
+            
+            <div id="flow-row" class="grid grid-cols-12 py-2 text-slate-300">
+              <div class="col-span-12 text-slate-500 italic text-center py-1">
+                -- EMPTY --
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAP 3: ahhs_t3_stats (Phase 3 Quantized Autoencoder Counters) -->
+        <div class="bg-slate-900/90 rounded-xl border border-slate-700 p-4 shadow-inner">
+          <div class="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase mb-2 flex items-center justify-between">
+            <span>ahhs_t3_stats</span>
+            <span class="text-[10px] font-mono text-purple-400 font-bold">&theta; = 20</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div id="val-t3-inspected" class="text-2xl md:text-3xl font-black font-mono text-purple-400 transition-transform">
+                0
+              </div>
+              <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
+                INSPECTED
+              </div>
+            </div>
+            <div>
+              <div id="val-t3-anomaly" class="text-2xl md:text-3xl font-black font-mono text-rose-500 transition-transform">
+                0
+              </div>
+              <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
+                ANOMALY
+              </div>
+            </div>
+            <div>
+              <div id="val-t3-normal" class="text-2xl md:text-3xl font-black font-mono text-emerald-400 transition-transform">
+                0
+              </div>
+              <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
+                NORMAL
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAP 4: ahhs_blocklist (Active 60s Blocklist) -->
+        <div class="bg-slate-900/90 rounded-xl border border-slate-700 p-4 shadow-inner">
+          <div class="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase mb-2 flex items-center justify-between">
+            <span>ahhs_blocklist</span>
+            <span id="badge-lockout" class="hidden text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse font-bold">
+              LOCKOUT ACTIVE (60s)
+            </span>
+          </div>
+
+          <div id="blocklist-row" class="font-mono text-xs text-slate-500 italic text-center py-1">
+            -- NO BLOCKED FLOWS --
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- JAVASCRIPT LOGIC & PACKET ANIMATIONS -->
+  <!-- ================================================================= -->
+  <script>
+    // --- State Variables ---
+    let stats = {
+      pass: 0,
+      drop: 0,
+      ambiguous: 0,
+      t3Inspected: 0,
+      t3Anomaly: 0,
+      t3Normal: 0
+    };
+
+    let flowKey = null;
+    let flowPackets = 0;
+    let flowBytes = 0;
+    let isProcessing = false;
+    let autoInterval = null;
+    let blocklistTimer = null;
+    let isBlocked = false;
+
+    // --- DOM References ---
+    const btnBenign = document.getElementById('btn-benign');
+    const btnMalicious = document.getElementById('btn-malicious');
+    const btnAmbiguous = document.getElementById('btn-ambiguous');
+    const btnReset = document.getElementById('btn-reset');
+    const toggleStream = document.getElementById('toggle-stream');
+
+    const nodeTier1 = document.getElementById('node-tier1');
+    const nodeTier2 = document.getElementById('node-tier2');
+    const nodeTier3 = document.getElementById('node-tier3');
+    const tier3ErrBanner = document.getElementById('tier3-err-banner');
+
+    const valPass = document.getElementById('val-pass');
+    const valDrop = document.getElementById('val-drop');
+    const valAmbiguous = document.getElementById('val-ambiguous');
+    const valT3Inspected = document.getElementById('val-t3-inspected');
+    const valT3Anomaly = document.getElementById('val-t3-anomaly');
+    const valT3Normal = document.getElementById('val-t3-normal');
+
+    const flowRow = document.getElementById('flow-row');
+    const blocklistRow = document.getElementById('blocklist-row');
+    const badgeLockout = document.getElementById('badge-lockout');
+    const packetBlock = document.getElementById('packet-block');
+    const packetLayer = document.getElementById('packet-layer');
+
+    const segs = [
+      document.getElementById('seg-1'),
+      document.getElementById('seg-2'),
+      document.getElementById('seg-3'),
+      document.getElementById('seg-4'),
+      document.getElementById('seg-5')
+    ];
+
+    // --- Flying Packet Helper ---
+    function launchPacket(fromEl, toEl, colorHex, onComplete) {
+      const fromRect = fromEl.getBoundingClientRect();
+      const toRect = toEl.getBoundingClientRect();
+
+      const startX = fromRect.left + fromRect.width / 2;
+      const startY = fromRect.top + fromRect.height / 2;
+      const endX = toRect.left + toRect.width / 2;
+      const endY = toRect.top + toRect.height / 2;
+
+      const dot = document.createElement('div');
+      dot.className = 'packet-dot';
+      dot.style.backgroundColor = colorHex;
+      dot.style.boxShadow = `0 0 20px ${colorHex}, 0 0 8px #ffffff`;
+      dot.style.left = `${startX}px`;
+      dot.style.top = `${startY}px`;
+      packetLayer.appendChild(dot);
+
+      requestAnimationFrame(() => {
+        dot.style.left = `${endX}px`;
+        dot.style.top = `${endY}px`;
+      });
+
+      setTimeout(() => {
+        dot.remove();
+        if (onComplete) onComplete(endX, endY);
+      }, 450);
+    }
+
+    // --- Particle Explosion ---
+    function spawnExplosion(x, y, colorHex) {
+      const count = 12;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'explode-particle';
+        p.style.backgroundColor = colorHex;
+        p.style.boxShadow = `0 0 10px ${colorHex}`;
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        p.style.width = `${Math.random() * 5 + 3}px`;
+        p.style.height = p.style.width;
+
+        const angle = (Math.PI * 2 * i) / count;
+        const dist = Math.random() * 45 + 25;
+        p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        p.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+
+        packetLayer.appendChild(p);
+        setTimeout(() => p.remove(), 500);
+      }
+    }
+
+    // --- Update Visual Segments ---
+    function updateSegments(count) {
+      segs.forEach((seg, idx) => {
+        if (idx < count) {
+          seg.className = 'h-3 rounded-full bg-amber-400 border border-amber-300 shadow-[0_0_8px_#F59E0B] transition-all duration-300';
+        } else {
+          seg.className = 'h-3 rounded-full bg-slate-800 border border-slate-700 transition-all duration-300';
+        }
+      });
+    }
+
+    // --- Render Telemetry UI ---
+    function renderTelemetry() {
+      valPass.textContent = stats.pass;
+      valDrop.textContent = stats.drop;
+      valAmbiguous.textContent = stats.ambiguous;
+      valT3Inspected.textContent = stats.t3Inspected;
+      valT3Anomaly.textContent = stats.t3Anomaly;
+      valT3Normal.textContent = stats.t3Normal;
+
+      if (!flowKey) {
+        flowRow.innerHTML = `
+          <div class="col-span-12 text-slate-500 italic text-center py-1">
+            -- EMPTY --
+          </div>
+        `;
+      } else {
+        flowRow.innerHTML = `
+          <div class="col-span-6 font-mono text-amber-400 font-bold truncate">${flowKey}</div>
+          <div class="col-span-3 text-right font-mono font-bold text-white">${flowPackets}</div>
+          <div class="col-span-3 text-right font-mono text-slate-300">${flowBytes}B</div>
+        `;
+      }
+    }
+
+    // --- 1. Handle Benign Flow ---
+    function sendBenign() {
+      if (isProcessing && !toggleStream.checked) return;
+      isProcessing = true;
+
+      packetBlock.textContent = `SRC: 192.168.1.104 | DST: 80`;
+
+      launchPacket(btnBenign, nodeTier1, '#10B981', (x, y) => {
+        // Flash Tier 1 Emerald Green
+        nodeTier1.classList.remove('flash-emerald', 'flash-rose', 'flash-amber');
+        void nodeTier1.offsetWidth;
+        nodeTier1.classList.add('flash-emerald');
+
+        stats.pass++;
+        renderTelemetry();
+
+        // Animate packet passing out
+        const exitDot = document.createElement('div');
+        exitDot.className = 'packet-dot';
+        exitDot.style.backgroundColor = '#10B981';
+        exitDot.style.boxShadow = '0 0 20px #10B981';
+        exitDot.style.left = `${x}px`;
+        exitDot.style.top = `${y}px`;
+        packetLayer.appendChild(exitDot);
+
+        requestAnimationFrame(() => {
+          exitDot.style.left = `${x + 160}px`;
+          exitDot.style.top = `${y - 120}px`;
+          exitDot.style.opacity = '0';
+        });
+
+        setTimeout(() => {
+          exitDot.remove();
+          isProcessing = false;
+        }, 400);
+      });
+    }
+
+    // --- 2. Handle Malicious Flow ---
+    function sendMalicious() {
+      if (isProcessing && !toggleStream.checked) return;
+      isProcessing = true;
+
+      packetBlock.textContent = `SRC: 198.51.100.4 | DST: 4444`;
+
+      launchPacket(btnMalicious, nodeTier1, '#F43F5E', (x, y) => {
+        // Flash Tier 1 Rose Red
+        nodeTier1.classList.remove('flash-emerald', 'flash-rose', 'flash-amber');
+        void nodeTier1.offsetWidth;
+        nodeTier1.classList.add('flash-rose');
+
+        stats.drop++;
+        renderTelemetry();
+
+        // Explode packet at Tier 1
+        spawnExplosion(x, y, '#F43F5E');
+
+        setTimeout(() => {
+          isProcessing = false;
+        }, 400);
+      });
+    }
+
+    // --- 3. Handle Ambiguous Flow (With Blocklist Fast-Path Check) ---
+    function sendAmbiguous() {
+      if (isProcessing && !toggleStream.checked) return;
+      isProcessing = true;
+
+      packetBlock.textContent = `SRC: 10.0.0.15 | DST: 8080`;
+
+      // Check if flow is currently locked out by ahhs_blocklist
+      if (isBlocked) {
+        launchPacket(btnAmbiguous, nodeTier1, '#F43F5E', (x, y) => {
+          // Fast-path blocklist drop!
+          nodeTier1.classList.remove('flash-emerald', 'flash-rose', 'flash-amber');
+          void nodeTier1.offsetWidth;
+          nodeTier1.classList.add('flash-rose');
+
+          stats.drop++;
+          renderTelemetry();
+          spawnExplosion(x, y, '#F43F5E');
+
+          packetBlock.textContent = `BLOCKLIST HIT: 10.0.0.15:8080 -> XDP_DROP`;
+
+          setTimeout(() => { isProcessing = false; }, 300);
+        });
+        return;
+      }
+
+      launchPacket(btnAmbiguous, nodeTier1, '#F59E0B', (x, y) => {
+        // Flash Tier 1 Amber
+        nodeTier1.classList.remove('flash-emerald', 'flash-rose', 'flash-amber');
+        void nodeTier1.offsetWidth;
+        nodeTier1.classList.add('flash-amber');
+
+        stats.ambiguous++;
+        renderTelemetry();
+
+        // Launch from Tier 1 to Tier 2
+        launchPacket(nodeTier1, nodeTier2, '#F59E0B', () => {
+          // Update flow state
+          if (!flowKey) {
+            flowKey = '10.0.0.15:8080';
+            flowPackets = 1;
+            flowBytes = 64;
+          } else {
+            flowPackets++;
+            flowBytes += 64;
+          }
+
+          updateSegments(flowPackets);
+          renderTelemetry();
+
+          // Threshold Check: 5 packets triggers Tier 3 Autoencoder
+          if (flowPackets >= 5) {
+            triggerTier3();
+          } else {
+            isProcessing = false;
+          }
+        });
+      });
+    }
+
+    // --- Trigger Tier 3 Quantized Autoencoder Tail Call ---
+    function triggerTier3() {
+      // Launch bolt from Tier 2 to Tier 3
+      launchPacket(nodeTier2, nodeTier3, '#A855F7', () => {
+        // Illuminate Tier 3 Electric Purple
+        nodeTier3.classList.remove('opacity-40', 'bg-slate-900/40');
+        nodeTier3.classList.add('opacity-100', 'bg-slate-900/90', 'flash-purple');
+        tier3ErrBanner.classList.remove('hidden');
+
+        stats.t3Inspected++;
+        stats.t3Anomaly++;
+        renderTelemetry();
+
+        // Activate 60s Blocklist
+        isBlocked = true;
+        badgeLockout.classList.remove('hidden');
+        blocklistRow.innerHTML = `
+          <div class="grid grid-cols-12 text-rose-400 font-bold items-center py-1">
+            <div class="col-span-6 text-left">10.0.0.15:8080</div>
+            <div class="col-span-3 text-center text-[10px] bg-rose-500/20 rounded py-0.5 border border-rose-500/30">DROP</div>
+            <div class="col-span-3 text-right" id="block-countdown">60s TTL</div>
+          </div>
+        `;
+
+        let ttl = 60;
+        if (blocklistTimer) clearInterval(blocklistTimer);
+        blocklistTimer = setInterval(() => {
+          ttl--;
+          const cd = document.getElementById('block-countdown');
+          if (cd) cd.textContent = `${ttl}s TTL`;
+          if (ttl <= 0) {
+            clearInterval(blocklistTimer);
+            isBlocked = false;
+            badgeLockout.classList.add('hidden');
+            blocklistRow.innerHTML = `<div class="font-mono text-xs text-slate-500 italic text-center py-1">-- NO BLOCKED FLOWS --</div>`;
+          }
+        }, 1000);
+
+        // Reset sliding window accumulators (kernel parity)
+        setTimeout(() => {
+          flowKey = null;
+          flowPackets = 0;
+          flowBytes = 0;
+          updateSegments(0);
+          renderTelemetry();
+
+          nodeTier3.classList.remove('flash-purple');
+          nodeTier3.classList.remove('opacity-100', 'bg-slate-900/90');
+          nodeTier3.classList.add('opacity-40', 'bg-slate-900/40');
+          tier3ErrBanner.classList.add('hidden');
+          isProcessing = false;
+        }, 1100);
+      });
+    }
+
+    // --- Button Event Listeners ---
+    btnBenign.addEventListener('click', sendBenign);
+    btnMalicious.addEventListener('click', sendMalicious);
+    btnAmbiguous.addEventListener('click', sendAmbiguous);
+
+    btnReset.addEventListener('click', () => {
+      stats = { pass: 0, drop: 0, ambiguous: 0, t3Inspected: 0, t3Anomaly: 0, t3Normal: 0 };
+      flowKey = null;
+      flowPackets = 0;
+      flowBytes = 0;
+      isBlocked = false;
+      if (blocklistTimer) clearInterval(blocklistTimer);
+      badgeLockout.classList.add('hidden');
+      blocklistRow.innerHTML = `<div class="font-mono text-xs text-slate-500 italic text-center py-1">-- NO BLOCKED FLOWS --</div>`;
+      updateSegments(0);
+      renderTelemetry();
+      packetBlock.textContent = `SRC: 192.168.1.104 | DST: 80`;
+      toggleStream.checked = false;
+      if (autoInterval) clearInterval(autoInterval);
+    });
+
+    // --- Auto Stream Toggle ---
+    toggleStream.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        autoInterval = setInterval(() => {
+          const r = Math.random();
+          if (r < 0.40) {
+            sendBenign();
+          } else if (r < 0.70) {
+            sendMalicious();
+          } else {
+            sendAmbiguous();
+          }
+        }, 900);
+      } else {
+        if (autoInterval) clearInterval(autoInterval);
+      }
+    });
+
+    // Initial render
+    renderTelemetry();
+  </script>
+</body>
+</html>

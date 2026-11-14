@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AHHS-IDS: How AI Protects Networks at 100 Gbps</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    @keyframes scan-laser {
+      0% { top: 0%; opacity: 0.8; }
+      50% { top: 90%; opacity: 1; }
+      100% { top: 0%; opacity: 0.8; }
+    }
+    .scanner-beam {
+      animation: scan-laser 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen p-4 md:p-8 flex flex-col justify-between">
+
+  <!-- HEADER -->
+  <header class="max-w-6xl mx-auto w-full mb-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            Interactive Visual Guide
+          </span>
+          <span class="text-xs text-slate-400">For General Audiences & Presentation</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white mt-1">
+          How AHHS-IDS Protects High-Speed Networks
+        </h1>
+        <p class="text-sm text-slate-400">
+          An intuitive visual explanation of the 3-Tier AI Security Guard running directly in the Linux Kernel.
+        </p>
+      </div>
+
+      <!-- MODE TOGGLE -->
+      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-xl self-start md:self-auto">
+        <button id="btn-mode-simple" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition-all shadow">
+          ✈️ Airport Analogy
+        </button>
+        <button id="btn-mode-tech" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">
+          💻 Technical Terms
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN INTERACTIVE CONTAINER -->
+  <main class="max-w-6xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT: CONTROLS & SCENARIO SELECTION (4 cols) -->
+    <div class="lg:col-span-4 flex flex-col gap-4">
+      
+      <!-- Scenario Selector Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+        <h2 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 flex items-center justify-between">
+          <span>Choose a Traffic Scenario</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        </h2>
+        
+        <div class="space-y-3">
+          <!-- Button 1: Normal Traffic -->
+          <button id="btn-scenario-normal" class="w-full text-left p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/30 transition-all group relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                1. Regular Everyday Traffic
+              </span>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">Port 80</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Watching YouTube or browsing a website. Verified benign traveler with pre-approved fast pass.
+            </p>
+          </button>
+
+          <!-- Button 2: Obvious Attack -->
+          <button id="btn-scenario-attack1" class="w-full text-left p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/20 hover:bg-rose-900/30 transition-all group">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sm text-rose-400 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                2. Obvious Known Hacker
+              </span>
+              <span class="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono">Port 4444</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Known automated hacking script (Metasploit). Face is on the "Wanted" poster at the entrance.
+            </p>
+          </button>
+
+          <!-- Button 3: Stealth Attack -->
+          <button id="btn-scenario-attack2" class="w-full text-left p-3.5 rounded-xl border border-amber-500/30 bg-amber-950/20 hover:bg-amber-900/30 transition-all group">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sm text-amber-400 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                3. Stealthy Disguised Flood
+              </span>
+              <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">Port 8080</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Unknown origin disguise. Sends 150 rapid packets trying to sneak past the guards into the system.
+            </p>
+          </button>
+        </div>
+
+        <!-- Simulation Controls -->
+        <div class="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <button id="btn-send-packet" class="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+            <span>🚀 Send Traffic Stream</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Plain English Explanation Box -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex-1 flex flex-col justify-between">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+            <span>📢 What's Happening Right Now?</span>
+          </h3>
+          <div id="narrative-text" class="text-sm text-slate-300 leading-relaxed font-normal">
+            Select a scenario and click <strong class="text-indigo-400">"Send Traffic Stream"</strong> to watch how each tier inspects and filters the packets.
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span id="tier-indicator">Stage: Awaiting Ingress</span>
+          <span id="timing-indicator">Speed: Real-time</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CENTER & RIGHT: 3-TIER VISUAL PIPELINE (8 cols) -->
+    <div class="lg:col-span-8 flex flex-col gap-6">
+
+      <!-- STAGE 1: TIER 1 PRE-FILTER -->
+      <div id="card-tier1" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 transition-all duration-300 relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2.5">
+            <div id="badge-tier1" class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs">
+              1
+            </div>
+            <div>
+              <h3 id="title-tier1" class="font-bold text-sm text-white">Tier 1: Express Gate (Fast Pass)</h3>
+              <p id="sub-tier1" class="text-xs text-slate-400">Instantly checks identity at the front door (under 1 microsecond)</p>
+            </div>
+          </div>
+          <span id="status-tier1" class="text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
+            IDLE
+          </span>
+        </div>
+
+        <!-- Tier 1 Visualization Lane -->
+        <div class="relative h-14 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center px-4 overflow-hidden">
+          <div class="text-xs font-mono text-slate-500 flex-1 flex items-center gap-6">
+            <span>Gate A: <span class="text-emerald-400 font-bold">Fast Pass (Web)</span></span>
+            <span>Gate B: <span class="text-rose-400 font-bold">Watchlist (Hacker)</span></span>
+            <span>Gate C: <span class="text-amber-400 font-bold">Unknown (To Lobby)</span></span>
+          </div>
+
+          <!-- Animated Packet Avatar -->
+          <div id="packet-avatar" class="absolute left-4 top-3.5 w-7 h-7 rounded-full bg-slate-600 flex items-center justify-center text-xs shadow-md transition-all duration-700 opacity-0">
+            📦
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 2: TIER 2 OBSERVATION LOBBY (SLIDING WINDOW) -->
+      <div id="card-tier2" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 transition-all duration-300 relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2.5">
+            <div id="badge-tier2" class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs">
+              2
+            </div>
+            <div>
+              <h3 id="title-tier2" class="font-bold text-sm text-white">Tier 2: Observation Lobby (Sliding Window)</h3>
+              <p id="sub-tier2" class="text-xs text-slate-400">Watches unknown traveler behavior until 100 packets accumulate</p>
+            </div>
+          </div>
+          <span id="status-tier2" class="text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
+            0 / 100 PACKETS
+          </span>
+        </div>
+
+        <!-- 5-segment Progress Bar -->
+        <div class="space-y-2">
+          <div class="w-full bg-slate-950 h-4 rounded-lg border border-slate-800 overflow-hidden flex p-0.5 gap-1">
+            <div id="seg-1" class="h-full flex-1 rounded bg-slate-800 transition-all duration-300"></div>
+            <div id="seg-2" class="h-full flex-1 rounded bg-slate-800 transition-all duration-300"></div>
+            <div id="seg-3" class="h-full flex-1 rounded bg-slate-800 transition-all duration-300"></div>
+            <div id="seg-4" class="h-full flex-1 rounded bg-slate-800 transition-all duration-300"></div>
+            <div id="seg-5" class="h-full flex-1 rounded bg-slate-800 transition-all duration-300"></div>
+          </div>
+          <div class="flex justify-between text-[11px] font-mono text-slate-500 px-1">
+            <span>0 pkts</span>
+            <span>25 pkts</span>
+            <span>50 pkts</span>
+            <span>75 pkts</span>
+            <span class="text-amber-400 font-bold">100 (Trigger AI Scanner)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 3: TIER 3 AI AUTOENCODER X-RAY SCANNER -->
+      <div id="card-tier3" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 transition-all duration-300 relative overflow-hidden">
+        <!-- Laser scan line overlay -->
+        <div id="laser-beam" class="hidden absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent scanner-beam z-10 pointer-events-none"></div>
+
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div id="badge-tier3" class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold text-xs">
+              3
+            </div>
+            <div>
+              <h3 id="title-tier3" class="font-bold text-sm text-white">Tier 3: AI X-Ray Body Scanner (Autoencoder)</h3>
+              <p id="sub-tier3" class="text-xs text-slate-400">Reconstructs traffic signal: if reconstruction error &gt; 20, alarm triggers!</p>
+            </div>
+          </div>
+          <span id="status-tier3" class="text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
+            STANDBY
+          </span>
+        </div>
+
+        <!-- RECONSTRUCTION COMPARISON & ANOMALY METER -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+          
+          <!-- Visual Signal Rebuilding (7 cols) -->
+          <div class="md:col-span-7 flex flex-col justify-between">
+            <span class="text-xs font-mono text-slate-400 mb-2 flex items-center justify-between">
+              <span>AI Reconstruction Quality</span>
+              <span id="signal-label" class="text-slate-500">No Signal</span>
+            </span>
+
+            <!-- SVG Visual Waveforms -->
+            <div class="h-24 w-full bg-slate-900/60 rounded-lg border border-slate-800/80 p-2 flex items-center justify-center relative overflow-hidden">
+              <svg id="svg-wave" class="w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
+                <!-- Grid lines -->
+                <line x1="0" y1="30" x2="200" y2="30" stroke="#1e293b" stroke-width="1" stroke-dasharray="4" />
+                <!-- Expected Signal (Blue) -->
+                <path id="path-expected" d="M 0 30 Q 50 10, 100 30 T 200 30" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.3" />
+                <!-- Actual AI Reconstructed (Green or Red) -->
+                <path id="path-actual" d="M 0 30 Q 50 30, 100 30 T 200 30" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+
+            <div class="flex items-center gap-4 mt-2 text-[11px] text-slate-400">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-sky-400"></span> Expected Normal Shape</span>
+              <span class="flex items-center gap-1.5"><span id="legend-actual" class="w-2.5 h-0.5 bg-slate-400"></span> AI Reconstruction</span>
+            </div>
+          </div>
+
+          <!-- Big Number Anomaly Gauge (5 cols) -->
+          <div class="md:col-span-5 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+            <span class="text-xs uppercase font-bold text-slate-400">Anomaly Error Score</span>
+            
+            <div class="flex items-baseline gap-1 my-1">
+              <span id="meter-score" class="text-4xl font-black font-mono text-slate-500 tracking-tight">0</span>
+              <span class="text-xs text-slate-500 font-mono">/ θ=20</span>
+            </div>
+
+            <div class="w-full bg-slate-900 h-2.5 rounded-full border border-slate-800 overflow-hidden my-1">
+              <div id="meter-bar" class="h-full bg-slate-700 w-0 transition-all duration-700"></div>
+            </div>
+
+            <span id="meter-verdict" class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
+              Waiting for Scan
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ACTIVE SECURITY BARRIER LOCKDOWN (TIER 3 BLOCKLIST) -->
+      <div id="banner-blocklist" class="hidden bg-rose-950/40 border border-rose-500/50 rounded-2xl p-4 flex items-center justify-between text-rose-300 shadow-xl transition-all">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl animate-pulse">🔒</span>
+          <div>
+            <h4 class="font-bold text-sm text-rose-200">Security Lockout Active: Flow Blocklisted for 60 Seconds</h4>
+            <p class="text-xs text-rose-300/80">Port 8080 from 127.0.0.1 has been barred. Any further packets are dropped instantly at the door.</p>
+          </div>
+        </div>
+        <span id="block-timer" class="font-mono text-xs font-bold px-3 py-1 bg-rose-500/20 text-rose-300 rounded-lg border border-rose-500/40">
+          60s TTL
+        </span>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER SUMMARY & REAL-WORLD METRICS -->
+  <footer class="max-w-6xl mx-auto w-full mt-6 pt-4 border-t border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+    <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
+      <span class="text-xs text-slate-400 block">Kernel Gate Speed</span>
+      <span class="text-lg font-black text-emerald-400 font-mono">&lt; 1 µs</span>
+    </div>
+    <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
+      <span class="text-xs text-slate-400 block">AI Accuracy (AUC)</span>
+      <span class="text-lg font-black text-white font-mono">1.000 (100%)</span>
+    </div>
+    <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
+      <span class="text-xs text-slate-400 block">False Alarms (FPR)</span>
+      <span class="text-lg font-black text-emerald-400 font-mono">0.66%</span>
+    </div>
+    <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
+      <span class="text-xs text-slate-400 block">Kernel Bit-Parity</span>
+      <span class="text-lg font-black text-purple-400 font-mono">240 / 240 (100%)</span>
+    </div>
+  </footer>
+
+  <!-- SCRIPT -->
+  <script>
+    let currentScenario = 'normal';
+    let isTechnical = false;
+
+    const scenarios = {
+      normal: {
+        port: 80,
+        type: 'benign',
+        name: 'Regular Web Traffic (Port 80)',
+        simpleDesc: 'Normal frequent flyer with a verified fast pass. The front gate recognizes HTTP traffic immediately and lets it pass without delays.',
+        techDesc: 'Tier 1 Decision Tree matches destination port 80 against stateless rules. Classifies as PASS. Emits XDP_PASS in O(1) time.',
+        tier1Result: 'PASS',
+        tier1Color: 'emerald',
+        stopsAtTier1: true,
+        errorScore: 0
+      },
+      attack1: {
+        port: 4444,
+        type: 'malicious',
+        name: 'Obvious Hacker Tool (Port 4444)',
+        simpleDesc: 'Known hacker signature. The front gate security guard recognizes the wanted criminal and turns them away instantly at the door.',
+        techDesc: 'Tier 1 Decision Tree matches port 4444 (Metasploit payload handler). Classifies as DROP. Emits XDP_DROP immediately without state tracking.',
+        tier1Result: 'DROP',
+        tier1Color: 'rose',
+        stopsAtTier1: true,
+        errorScore: 0
+      },
+      attack2: {
+        port: 8080,
+        type: 'ambiguous_attack',
+        name: 'Stealthy Disguised Flood (Port 8080)',
+        simpleDesc: 'Disguised traveler with no badge. Directed to the Observation Lobby. After watching 100 packets, the AI Body Scanner discovers weaponized flood patterns and slams the 60-second security lockdown!',
+        techDesc: 'Tier 1 marks port 8080 as AMBIGUOUS. Tier 2 tracks 100-packet window in flow_lru_map. At packet 100, BPF tail-calls Tier 3 autoencoder. Error 1904 > 20 triggers XDP_DROP and inserts flow into ahhs_blocklist.',
+        tier1Result: 'AMBIGUOUS',
+        tier1Color: 'amber',
+        stopsAtTier1: false,
+        errorScore: 1904
+      }
+    };
+
+    // DOM Elements
+    const btnNormal = document.getElementById('btn-scenario-normal');
+    const btnAttack1 = document.getElementById('btn-scenario-attack1');
+    const btnAttack2 = document.getElementById('btn-scenario-attack2');
+    const btnSend = document.getElementById('btn-send-packet');
+    const btnModeSimple = document.getElementById('btn-mode-simple');
+    const btnModeTech = document.getElementById('btn-mode-tech');
+
+    const narrative = document.getElementById('narrative-text');
+    const statusT1 = document.getElementById('status-tier1');
+    const statusT2 = document.getElementById('status-tier2');
+    const statusT3 = document.getElementById('status-tier3');
+    const packetAvatar = document.getElementById('packet-avatar');
+    const bannerBlocklist = document.getElementById('banner-blocklist');
+    const laserBeam = document.getElementById('laser-beam');
+    const meterScore = document.getElementById('meter-score');
+    const meterBar = document.getElementById('meter-bar');
+    const meterVerdict = document.getElementById('meter-verdict');
+    const pathActual = document.getElementById('path-actual');
+    const legendActual = document.getElementById('legend-actual');
+    const signalLabel = document.getElementById('signal-label');
+
+    // Selection
+    function selectScenario(scen) {
+      currentScenario = scen;
+      [btnNormal, btnAttack1, btnAttack2].forEach(b => b.classList.remove('ring-2', 'ring-indigo-500'));
+      if (scen === 'normal') btnNormal.classList.add('ring-2', 'ring-indigo-500');
+      if (scen === 'attack1') btnAttack1.classList.add('ring-2', 'ring-indigo-500');
+      if (scen === 'attack2') btnAttack2.classList.add('ring-2', 'ring-indigo-500');
+
+      resetSimulation();
+      updateText();
+    }
+
+    btnNormal.addEventListener('click', () => selectScenario('normal'));
+    btnAttack1.addEventListener('click', () => selectScenario('attack1'));
+    btnAttack2.addEventListener('click', () => selectScenario('attack2'));
+
+    btnModeSimple.addEventListener('click', () => {
+      isTechnical = false;
+      btnModeSimple.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition-all shadow";
+      btnModeTech.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all";
+      updateText();
+    });
+
+    btnModeTech.addEventListener('click', () => {
+      isTechnical = true;
+      btnModeTech.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition-all shadow";
+      btnModeSimple.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all";
+      updateText();
+    });
+
+    function updateText() {
+      const s = scenarios[currentScenario];
+      narrative.innerHTML = isTechnical ? s.techDesc : s.simpleDesc;
+      document.getElementById('title-tier1').innerText = isTechnical ? 'Tier 1: Stateless Decision Tree' : 'Tier 1: Express Gate (Fast Pass)';
+      document.getElementById('title-tier2').innerText = isTechnical ? 'Tier 2: Stateful Sliding Window (LRU Map)' : 'Tier 2: Observation Lobby (Sliding Window)';
+      document.getElementById('title-tier3').innerText = isTechnical ? 'Tier 3: 4-Layer Chained Quantized Autoencoder' : 'Tier 3: AI X-Ray Body Scanner (Autoencoder)';
+    }
+
+    function resetSimulation() {
+      packetAvatar.style.opacity = '0';
+      packetAvatar.style.transform = 'translateX(0px)';
+      bannerBlocklist.classList.add('hidden');
+      laserBeam.classList.add('hidden');
+      statusT1.innerText = 'IDLE';
+      statusT1.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700';
+      statusT2.innerText = '0 / 100 PACKETS';
+      statusT3.innerText = 'STANDBY';
+      statusT3.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700';
+
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`seg-${i}`).className = 'h-full flex-1 rounded bg-slate-800 transition-all duration-300';
+      }
+
+      meterScore.innerText = '0';
+      meterScore.className = 'text-4xl font-black font-mono text-slate-500 tracking-tight';
+      meterBar.style.width = '0%';
+      meterBar.className = 'h-full bg-slate-700 w-0 transition-all duration-700';
+      meterVerdict.innerText = 'Waiting for Scan';
+      meterVerdict.className = 'text-xs font-bold text-slate-400 uppercase tracking-wider mt-1';
+
+      pathActual.setAttribute('d', 'M 0 30 Q 50 30, 100 30 T 200 30');
+      pathActual.setAttribute('stroke', '#94a3b8');
+      legendActual.className = 'w-2.5 h-0.5 bg-slate-400';
+      signalLabel.innerText = 'No Signal';
+    }
+
+    // RUN SIMULATION
+    btnSend.addEventListener('click', () => {
+      resetSimulation();
+      const s = scenarios[currentScenario];
+
+      // Step 1: Packet Arrives at Tier 1
+      packetAvatar.style.opacity = '1';
+      packetAvatar.innerText = s.type === 'benign' ? '🟢' : (s.type === 'malicious' ? '🔴' : '🟡');
+      statusT1.innerText = 'ANALYZING 5-TUPLE...';
+
+      setTimeout(() => {
+        if (s.stopsAtTier1) {
+          if (s.tier1Result === 'PASS') {
+            statusT1.innerText = 'PASS (EXPRESS LANE)';
+            statusT1.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            packetAvatar.style.transform = 'translateX(400px)';
+            narrative.innerHTML = isTechnical 
+              ? '✅ <strong>Verdict: XDP_PASS</strong>. Packet verified as benign HTTP port 80. Passed instantly at line rate.'
+              : '✅ <strong>Approved!</strong> Fast-pass verified. Allowed into the building in less than 1 microsecond.';
+          } else {
+            statusT1.innerText = 'DROP (BLOCKED)';
+            statusT1.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+            packetAvatar.style.transform = 'translateX(180px)';
+            narrative.innerHTML = isTechnical
+              ? '🛑 <strong>Verdict: XDP_DROP</strong>. Packet matched known attack port 4444. Discarded immediately.'
+              : '🛑 <strong>Blocked at the door!</strong> Known bad actor turned away immediately.';
+          }
+        } else {
+          // Ambiguous -> Moves to Tier 2 Lobby
+          statusT1.innerText = 'AMBIGUOUS -> TO LOBBY';
+          statusT1.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+          packetAvatar.style.transform = 'translateX(260px)';
+
+          narrative.innerHTML = isTechnical
+            ? '🟡 <strong>Tier 1 Ambiguous</strong>. Sent to Tier 2 LRU window tracking. Beginning 100-packet observation.'
+            : '🟡 <strong>Hold in Observation Lobby</strong>. Traveler directed to waiting area. Counting 100 behavioral packets...';
+
+          // Simulate 100 packets accumulating
+          let count = 0;
+          const interval = setInterval(() => {
+            count += 20;
+            statusT2.innerText = `${count} / 100 PACKETS`;
+            const segId = `seg-${count / 20}`;
+            document.getElementById(segId).className = 'h-full flex-1 rounded bg-amber-500 transition-all duration-300 animate-pulse';
+
+            if (count >= 100) {
+              clearInterval(interval);
+              triggerTier3();
+            }
+          }, 250);
+        }
+      }, 500);
+
+      function triggerTier3() {
+        statusT2.innerText = '100 PKTS (TAIL CALL TRIGGERED)';
+        statusT2.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        laserBeam.classList.remove('hidden');
+        statusT3.innerText = 'AI SCANNING IN PROGRESS...';
+        statusT3.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 animate-pulse';
+
+        narrative.innerHTML = isTechnical
+          ? '🟣 <strong>Tier 3 Tail Call Linkage</strong>. Executing 4 chained BPF programs: L1(8->16) -> L2(16->4) -> L3(4->16) -> L4(16->8).'
+          : '🟣 <strong>AI X-Ray Scanner Active!</strong> The neural network analyzes the 100 packets and attempts to reconstruct the signal.';
+
+        setTimeout(() => {
+          laserBeam.classList.add('hidden');
+          // Anomaly detected: Error 1904 vs Theta 20
+          meterScore.innerText = '1904';
+          meterScore.className = 'text-4xl font-black font-mono text-rose-500 tracking-tight animate-bounce';
+          meterBar.style.width = '100%';
+          meterBar.className = 'h-full bg-rose-500 w-full transition-all duration-700';
+          meterVerdict.innerText = 'SEVERE ANOMALY DETECTED';
+          meterVerdict.className = 'text-xs font-bold text-rose-400 uppercase tracking-wider mt-1';
+
+          // Clashing Actual Waveform (Distorted)
+          pathActual.setAttribute('d', 'M 0 10 L 40 50 L 80 15 L 120 45 L 160 5 L 200 55');
+          pathActual.setAttribute('stroke', '#f43f5e');
+          legendActual.className = 'w-2.5 h-0.5 bg-rose-500';
+          signalLabel.innerText = 'Distorted (Mismatch: 1904)';
+          signalLabel.className = 'text-xs font-mono text-rose-400';
+
+          statusT3.innerText = 'DROP & BLOCKLIST';
+          statusT3.className = 'text-xs font-mono font-bold px-2.5 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+
+          // Show 60s Blocklist Banner
+          bannerBlocklist.classList.remove('hidden');
+
+          narrative.innerHTML = isTechnical
+            ? '🚨 <strong>Anomaly Verdict (err=1904 &gt; θ=20)</strong>: Packet dropped via XDP_DROP. Flow key <code>127.0.0.1:40000 -> 8080</code> written to <code>ahhs_blocklist</code> for 60 seconds.'
+            : '🚨 <strong>Alarm Triggered!</strong> The AI could not recognize the weird traffic shape (Error 1,904 vs safe limit 20). The attacker is ejected and their ID is locked out for 60 seconds!';
+        }, 1200);
+      }
+
+    });
+
+    // Default select
+    selectScenario('attack2');
+  </script>
+</body>
+</html>
