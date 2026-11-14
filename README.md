@@ -166,7 +166,8 @@ ebpf/
 │   ├── golden_tier3.json                    # 240 bit-exact verification vectors (100% parity)
 │   └── evaluation_summary.json              # Official CIC-IDS-2017 metrics (ROC-AUC 0.957, TPR 85.1%)
 │
-└── data/                                    # Dataset directory (.gitkeep)
+└── data/                                    # Dataset directory & download instructions
+    ├── README.md                            # Official CIC-IDS-2017 download links & guide
     └── .gitkeep
 ```
 
@@ -344,18 +345,21 @@ SELF-TEST RESULTS: 240/240 PASSED (100.0%)
 
 ### Step 9: Retrain on Official CIC-IDS-2017 Dataset
 
-To retrain the model or reproduce the full experimental evaluation from scratch:
+The pre-trained model binary (`models/ahhs_model.bin`) and bit-exact golden trace vectors (`models/golden_tier3.json`) are already provided. To retrain the models from scratch:
 
-#### Option A: Google Colab Turnkey Notebook
-1. Open Google Colab: [https://colab.research.google.com/](https://colab.research.google.com/)
-2. Upload [`AHHS_CICIDS2017_Exhaustive_Training.ipynb`](AHHS_CICIDS2017_Exhaustive_Training.ipynb).
-3. Select **Runtime -> Run all**.
-4. The notebook downloads official Canadian Institute for Cybersecurity (CIC-IDS-2017) datasets (Monday Benign, Friday PortScan, Wednesday DoS Slowloris), executes Quantization-Aware Training with Straight-Through Estimators (STE), calibrates $\theta = 58$, generates the 300-DPI evaluation dashboard, packs `ahhs_model.bin` (592 bytes), and exports all artifacts into a downloadable ZIP archive.
+1. **Download Dataset**: Follow the instructions and links in [`data/README.md`](data/README.md) to download the official Canadian Institute for Cybersecurity (CIC-IDS-2017) CSV archive (`MachineLearningCSV.zip`):
+   ```bash
+   cd data/
+   curl -O http://205.174.165.80/CICDataset/CIC-IDS-2017/Dataset/MachineLearningCSV.zip
+   unzip MachineLearningCSV.zip
+   cd ..
+   ```
 
-#### Option B: Regenerate the Notebook Locally
-```bash
-python3 scripts/build_cicids2017_notebook.py
-```
+2. **Retrain Tier 1 Decision Tree**:
+   ```bash
+   python3 scripts/train_tier1.py
+   # Generates updated bpf/tier1_tree.h
+   ```
 
 ---
 
