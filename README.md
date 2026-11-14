@@ -168,7 +168,7 @@ ebpf/
 │
 └── data/                                    # Dataset directory & download instructions
     ├── README.md                            # Official CIC-IDS-2017 download links & guide
-    └── .gitkeep
+    └── download_dataset.sh                  # Turnkey 1-click dataset download script
 ```
 
 ---
@@ -347,12 +347,11 @@ SELF-TEST RESULTS: 240/240 PASSED (100.0%)
 
 The pre-trained model binary (`models/ahhs_model.bin`) and bit-exact golden trace vectors (`models/golden_tier3.json`) are already provided. To retrain the models from scratch:
 
-1. **Download Dataset**: Follow the instructions and links in [`data/README.md`](data/README.md) to download the official Canadian Institute for Cybersecurity (CIC-IDS-2017) CSV archive (`MachineLearningCSV.zip`):
+1. **Download Dataset**: Use the automated download script or follow [`data/README.md`](data/README.md) to download the official Canadian Institute for Cybersecurity (CIC-IDS-2017) CSV archive (`MachineLearningCSV.zip`):
    ```bash
-   cd data/
-   curl -O http://205.174.165.80/CICDataset/CIC-IDS-2017/Dataset/MachineLearningCSV.zip
-   unzip MachineLearningCSV.zip
-   cd ..
+   bash data/download_dataset.sh
+   # Or manually:
+   # cd data/ && curl -O http://205.174.165.80/CICDataset/CIC-IDS-2017/Dataset/MachineLearningCSV.zip && unzip MachineLearningCSV.zip
    ```
 
 2. **Retrain Tier 1 Decision Tree**:
