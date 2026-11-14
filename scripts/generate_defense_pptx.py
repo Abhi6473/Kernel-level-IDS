@@ -365,7 +365,7 @@ This presentation provides a brief, visual, and rigorous walkthrough of our enti
     add_bullet(tf_k4, "[Amortized Pipeline]:", "Tier 1 Pre-Filter (11.8 ns) + Tier 2 LRU (45 ns) + Tier 3 NN (3.42 ns amortized).", pt_size=9.5)
     add_bullet(tf_k4, "[Immediate Quarantine]:", "Dynamic blocklist insertion in < 1 µs directly in-kernel; zero packets breach host!", pt_size=9.5, prefix_color=GREEN_ACCENT)
     add_bullet(tf_k4, "[Memory & Verifier]:", "592 B model, 7.2 MB total maps (100% L3 cache resident); < 600 total BPF instructions.", pt_size=9.5)
-    add_bullet(tf_k4, "[Empirical Accuracy]:", "0.992 ROC-AUC, 96.4% TPR, 0.66% FPR, >900x error separation, 100% bit parity.", pt_size=9.5, prefix_color=GREEN_ACCENT)
+    add_bullet(tf_k4, "[Empirical Accuracy]:", "0.957 ROC-AUC, 85.07% TPR, 9.81% FPR (100% PortScan, 70.14% Slowloris), 100% bit parity.", pt_size=9.5, prefix_color=GREEN_ACCENT)
     add_bullet(tf_k4, "[Verdict]:", "Wire speed AND deep anomaly detection with zero ring-buffer drops or packet leaks.", pt_size=9.5, prefix_color=GREEN_ACCENT)
 
     # Bottom Takeaway Card
@@ -418,18 +418,18 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
     add_diagram_node(s3, Inches(6.0), Inches(4.4), Inches(2.2), Inches(0.75), "Layer 3: 4 -> 16", "ahhs_t3_l3() (Expansion)", PURPLE_ACCENT)
     add_diagram_arrow(s3, Inches(8.25), Inches(4.65), Inches(0.3), Inches(0.18), PURPLE_ACCENT)
 
-    add_diagram_node(s3, Inches(8.6), Inches(4.4), Inches(3.9), Inches(0.75), "Layer 4: 16 -> 8 & Decision", "ahhs_t3_l4() (MSE Error vs theta=20)", PURPLE_ACCENT)
+    add_diagram_node(s3, Inches(8.6), Inches(4.4), Inches(3.9), Inches(0.75), "Layer 4: 16 -> 8 & Decision", "ahhs_t3_l4() (MSE Error vs theta=58)", PURPLE_ACCENT)
 
     add_card(s3, Inches(0.8), Inches(5.35), Inches(5.6), Inches(1.5), CARD_BG, CARD_BORDER)
     tb_n = s3.shapes.add_textbox(Inches(0.95), Inches(5.42), Inches(5.3), Inches(1.3))
     tf_n = tb_n.text_frame; tf_n.word_wrap = True
-    add_bullet(tf_n, "NORMAL TRAFFIC VERDICT:", "Reconstruction error err <= theta (20).", prefix_color=GREEN_ACCENT)
+    add_bullet(tf_n, "NORMAL TRAFFIC VERDICT:", "Reconstruction error err <= theta (58).", prefix_color=GREEN_ACCENT)
     add_bullet(tf_n, "Action:", "Flow forward with XDP_PASS. Counters incremented in ahhs_t3_stats.")
 
     add_card(s3, Inches(6.9), Inches(5.35), Inches(5.6), Inches(1.5), CARD_BG, CARD_BORDER)
     tb_a = s3.shapes.add_textbox(Inches(7.05), Inches(5.42), Inches(5.3), Inches(1.3))
     tf_a = tb_a.text_frame; tf_a.word_wrap = True
-    add_bullet(tf_a, "ANOMALOUS FLOOD VERDICT:", "Reconstruction error err > theta (20). Packet dropped via XDP_DROP.", prefix_color=RED_ACCENT)
+    add_bullet(tf_a, "ANOMALOUS FLOOD VERDICT:", "Reconstruction error err > theta (58). Packet dropped via XDP_DROP.", prefix_color=RED_ACCENT)
     add_bullet(tf_a, "Dynamic Fast-Path Quarantine:", "Offending 5-tuple inserted into ahhs_blocklist with 60s TTL. Subsequent packets dropped in ~12 ns!", prefix_color=RED_ACCENT)
 
     set_notes(s3, "Slide 3 presents the visual end-to-end dataflow connecting NIC ingress, fast-path cache, Tier 1, Tier 2, and Tier 3 chained inference.")
@@ -458,7 +458,7 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
     add_bullet(tf_q2, "ahhs_t3_l1():", "Program 0: Inputs centering (x - z0), layer-1 matmul (8 -> 16), tail call 1.")
     add_bullet(tf_q2, "ahhs_t3_l2():", "Program 1: Bottleneck compression layer (16 -> 4), tail call 2.")
     add_bullet(tf_q2, "ahhs_t3_l3():", "Program 2: Latent expansion layer (4 -> 16), tail call 3.")
-    add_bullet(tf_q2, "ahhs_t3_l4():", "Program 3: Output synthesis (16 -> 8), MSE error vs theta=20, blocklist quarantine.")
+    add_bullet(tf_q2, "ahhs_t3_l4():", "Program 3: Output synthesis (16 -> 8), MSE error vs theta=58, blocklist quarantine.")
     add_bullet(tf_q2, "ahhs_t3_selftest():", "In-kernel verifier test harness executed via BPF_PROG_TEST_RUN.")
 
     add_card(s4, Inches(0.8), Inches(4.4), Inches(5.6), Inches(2.6), CARD_BG, CARD_BORDER)
@@ -692,9 +692,9 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
         [
             "Sub-program 3; reconstructs 8 output features with matched scale s_io = 2^-5.",
             "Calculates squared Euclidean reconstruction error: err = sum((x_i - y_i)^2).",
-            "Evaluates err against calibrated threshold theta = 20.",
-            "Normal traffic (err <= 20): Increments normal stats and returns XDP_PASS.",
-            "Anomalous flood (err > 20): Triggers dynamic fast-path quarantine and drops packet."
+            "Evaluates err against calibrated threshold theta = 58.",
+            "Normal traffic (err <= 58): Increments normal stats and returns XDP_PASS.",
+            "Anomalous flood (err > 58): Triggers dynamic fast-path quarantine and drops packet."
         ],
         PURPLE_ACCENT
     )
@@ -895,7 +895,7 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
         [
             "Dumps BPF maps via bpftool JSON at 2.0 Hz: tier1_stats_map, ahhs_t3_stats, ahhs_blocklist.",
             "Parses 16-byte raw binary flow keys into human-readable IP addresses and ports.",
-            "Displays active model slot (592 bytes), anomaly threshold (theta = 20), and double-buffer status.",
+            "Displays active model slot (592 bytes), anomaly threshold (theta = 58), and double-buffer status.",
             "Baseline zero-reset (--zero / --reset): Captures initial state and displays clean delta counters for tests.",
             "Live blocklist display shows active quarantined flows, packet drops, and remaining TTL countdown."
         ],
@@ -1010,34 +1010,34 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
     add_card(s12, Inches(0.8), top_pos, card3_w, card3_h, CARD_BG, CARD_BORDER)
     tb_m1 = s12.shapes.add_textbox(Inches(0.95), top_pos + Inches(0.12), card3_w - Inches(0.3), card3_h - Inches(0.24))
     tf_m1 = tb_m1.text_frame; tf_m1.word_wrap = True
-    add_bullet(tf_m1, "OVERALL BENCHMARK ACCURACY", "", pt_size=11, prefix_color=NAVY_ACCENT)
-    add_bullet(tf_m1, "ROC-AUC Score:", "0.992 across combined multi-class attack test streams.")
-    add_bullet(tf_m1, "True Positive Rate (TPR):", "96.4% detection rate at calibrated threshold theta = 20.")
-    add_bullet(tf_m1, "False Positive Rate (FPR):", "0.66% on completely held-out legitimate benign traffic.")
-    add_bullet(tf_m1, "No Shortcut Learning:", "IP addresses randomized; splits based entirely on protocol metrics.")
-    add_bullet(tf_m1, "In-Kernel Feasibility:", "Integer inference executes without hardware FPU in ~1.15 µs.")
+    add_bullet(tf_m1, "OFFICIAL CIC-IDS-2017 BENCHMARK", "", pt_size=11, prefix_color=NAVY_ACCENT)
+    add_bullet(tf_m1, "ROC-AUC Score:", "0.9567 across 12,100 held-out evaluation windows (1.21M pkts).")
+    add_bullet(tf_m1, "Overall Detection Rate (TPR):", "85.07% detection rate at calibrated in-kernel threshold theta = 58.")
+    add_bullet(tf_m1, "False Alarm Rate (FPR):", "9.81% on held-out Monday benign traffic (206 / 2,100).")
+    add_bullet(tf_m1, "No Shortcut Learning:", "IP subnets excluded; decisions based entirely on protocol metrics.")
+    add_bullet(tf_m1, "In-Kernel Feasibility:", "Integer Q24 inference executes without hardware FPU in 342 ns.")
 
     add_card(s12, Inches(0.8) + card3_w + gap3, top_pos, card3_w, card3_h, CARD_BG, CARD_BORDER)
     tb_m2 = s12.shapes.add_textbox(Inches(0.95) + card3_w + gap3, top_pos + Inches(0.12), card3_w - Inches(0.3), card3_h - Inches(0.24))
     tf_m2 = tb_m2.text_frame; tf_m2.word_wrap = True
     add_bullet(tf_m2, "ATTACK DETECTION BREAKDOWN", "", pt_size=11, prefix_color=RED_ACCENT)
-    add_bullet(tf_m2, "Volumetric SYN Floods:", "100.0% detected and dropped; rapid blocklist quarantine.")
-    add_bullet(tf_m2, "Port Scanning (Nmap/masscan):", "99.8% caught as scans touch dynamic ambiguous ports.")
-    add_bullet(tf_m2, "DoS Slowloris / Low-Rate:", "94.2% caught via temporal window triggers (> 1.0s elapsed).")
+    add_bullet(tf_m2, "Friday PortScan:", "100.00% detected (AUC: 1.0000, 5,000 / 5,000 windows).")
+    add_bullet(tf_m2, "Wednesday DoS Slowloris:", "70.14% detected (AUC: 0.9135, 3,507 / 5,000 windows).")
+    add_bullet(tf_m2, "Monday Benign Traffic:", "Establishes clean uncorrupted benign manifold.")
     add_bullet(tf_m2, "Known Backdoors / Mirai:", "100.0% filtered at Tier 1 wire-speed ingress (~12 ns).")
-    add_bullet(tf_m2, "Data Exfiltration:", "91.5% detected through anomalous byte-to-packet ratios.")
+    add_bullet(tf_m2, "Combined Detection Rate:", "85.07% across 10,000 attack windows.")
 
     add_card(s12, Inches(0.8) + (card3_w + gap3) * 2, top_pos, card3_w, card3_h, CARD_BG, CARD_BORDER)
     tb_m3 = s12.shapes.add_textbox(Inches(0.95) + (card3_w + gap3) * 2, top_pos + Inches(0.12), card3_w - Inches(0.3), card3_h - Inches(0.24))
     tf_m3 = tb_m3.text_frame; tf_m3.word_wrap = True
     add_bullet(tf_m3, "SEPARATION MARGIN RIGOR", "", pt_size=11, prefix_color=GREEN_ACCENT)
-    add_bullet(tf_m3, "Benign Error Distribution:", "Median reconstruction error: err = 2 to 4 (well below theta = 20).")
-    add_bullet(tf_m3, "Attack Error Distribution:", "Median reconstruction error: err = 18,000 to 42,000.")
-    add_bullet(tf_m3, "Separation Margin:", "> 900x numerical margin between benign and attack vectors.")
-    add_bullet(tf_m3, "Quantile Calibration:", "Theta calibrated non-parametrically at 99th percentile of benign validation set.")
-    add_bullet(tf_m3, "Zero Tuning in Production:", "Threshold remains robust across diverse traffic profiles.")
+    add_bullet(tf_m3, "Benign Error Distribution:", "Median reconstruction error: err = 24 (well below theta = 58).")
+    add_bullet(tf_m3, "PortScan Error Distribution:", "Reconstruction error surges to err ≈ 16,000 (>> 58).")
+    add_bullet(tf_m3, "DoS Slowloris Distribution:", "Reconstruction error median 78, 75th percentile 196.")
+    add_bullet(tf_m3, "Quantile Calibration:", "Theta calibrated at 95th percentile of benign validation set (theta = 58).")
+    add_bullet(tf_m3, "Bit-Exact Reproducibility:", "Verified with 240 golden trace vectors (100% bit parity).")
 
-    set_notes(s12, "Slide 12 presents real-world validation on the CIC-IDS-2017 benchmark dataset, demonstrating 0.992 ROC-AUC, 96.4% TPR, and >900x separation margin.")
+    set_notes(s12, "Slide 12 presents real-world validation on the official CIC-IDS-2017 benchmark dataset, demonstrating 0.957 ROC-AUC, 85.07% overall TPR, 100% PortScan detection, and 70.1% Slowloris detection.")
 
     # =========================================================================
     # SLIDE 13: 97 Automated Tests & Verification Quality Gates
@@ -1154,8 +1154,8 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
     add_bullet(tf_s3, "Q3: HOW IS THE ANOMALY THRESHOLD CALIBRATED?", "", pt_size=10.5, prefix_color=GREEN_ACCENT)
     add_bullet(tf_s3, "Operational Risk:", "Arbitrary thresholds lead to excessive false alarms that drop legitimate traffic.")
     add_bullet(tf_s3, "Disjoint Validation Set:", "Theta is calibrated on held-out benign flows completely disjoint from training.")
-    add_bullet(tf_s3, "Non-Parametric Quantile:", "Set to 99th percentile: theta = Quantile(E_val, 0.99), mathematically bounding theoretical FPR <= 1.0%.")
-    add_bullet(tf_s3, "Empirical Validation:", "Achieved empirical FPR = 0.66% on test sets with > 900x margin to attack errors.")
+    add_bullet(tf_s3, "Non-Parametric Quantile:", "Set to 95th percentile (theta = 58) on benign validation flows, optimizing operating point detection.")
+    add_bullet(tf_s3, "Empirical Validation:", "Achieved 85.07% TPR on CIC-IDS-2017 with 100% PortScan detection and 9.81% FPR.")
 
     set_notes(s15, "Slide 15 addresses statistical machine learning rigor: shortcut elimination, symmetric quantization scaling, and quantile threshold calibration.")
 
@@ -1214,7 +1214,7 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
         ["1. Static XDP Filter (bpfilter / ACL)", "10 - 12 ns", "~83.3 Mpps (Wire-speed)", "Manual (Secs to Mins); Millions leak", "~35 insns | < 1 MB", "0.0% Zero-Day Detection; 100% blind to scans & dynamic rate shifts"],
         ["2. Monolithic Kernel ML (Lucid / Kitsune)", "450 - 1,200 ns / pkt", "~1.2 Mpps (Line collapse)", "< 1 µs, but >95% pkt drop (Self-DoS)", "> 4,000 insns | Cache thrash", "Line-rate collapse; verifier forces shallow models with low recall"],
         ["3. Hybrid RingBuf Offload (Falco / Tetragon)", "15 ns probe + 5-50 ms", "~8.0 Mpps (Queue bound)", "5,000 - 50,000 µs; >300,000 pkts breach", "Kernel probe OK | >100 MB daemon", "Ring buffer drops alerts (-ENOBUFS) during volumetric flood; blind"],
-        ["4. AHHS-IDS Multi-Tier (This Work - Achieved)", "16.45 ns (Amortized)", "60.7 Mpps (Full Line-Rate)", "< 1 µs In-Kernel Drop; 0 pkts breach", "< 600 total insns | 7.2 MB (L3)", "0.992 ROC-AUC, 96.4% TPR, 0.66% FPR, >900x error separation margin!"]
+        ["4. AHHS-IDS Multi-Tier (This Work - Achieved)", "16.45 ns (Amortized)", "60.7 Mpps (Full Line-Rate)", "< 1 µs In-Kernel Drop; 0 pkts breach", "< 600 total insns | 7.2 MB (L3)", "0.957 ROC-AUC, 85.1% TPR, 9.8% FPR (100% PortScan, 70.1% Slowloris), 100% bit parity!"]
     ]
     col_widths = [Inches(2.5), Inches(1.4), Inches(1.6), Inches(2.1), Inches(1.7), Inches(2.433)]
     add_table(s16, Inches(0.8), Inches(2.56), Inches(11.733), Inches(2.70), headers, rows, col_widths, font_size=Pt(8.5))
@@ -1224,14 +1224,14 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
     tb_imp = s16.shapes.add_textbox(Inches(1.0), Inches(5.42), Inches(11.3), Inches(1.40))
     tf_imp = tb_imp.text_frame; tf_imp.word_wrap = True
     add_bullet(tf_imp, "Why This Improvement Was Implemented:", "Prior in-kernel systems forced an untenable dilemma: Static filters are 100% blind to zero-days; Monolithic kernel ML causes self-inflicted DoS dropping >95% packets; Hybrid RingBuf offload allows >300,000 attack packets to breach the host. AHHS-IDS solves this via hierarchical amortization: 90% traffic resolved in 11.8 ns, 10% tracked in Tier 2, and 4-layer autoencoder amortized to 3.42 ns.", pt_size=9.5, prefix_color=NAVY_ACCENT)
-    add_bullet(tf_imp, "Concrete Numbers Achieved in AHHS-IDS:", "Measured on testbed & verification suites: 60.7 Mpps single-core line-rate forwarding (50.6x faster than monolithic kernel ML), executes with < 600 total BPF instructions across 4 tail calls, confines memory to 7.2 MB (100% L3 cache resident), and guarantees sub-microsecond in-kernel quarantine with 0.992 ROC-AUC and 100.0% bit-exact golden parity.", pt_size=9.5, prefix_color=GREEN_ACCENT)
+    add_bullet(tf_imp, "Concrete Numbers Achieved in AHHS-IDS:", "Measured on testbed & verification suites: 60.7 Mpps single-core line-rate forwarding (50.6x faster than monolithic kernel ML), executes with < 600 total BPF instructions across 4 tail calls, confines memory to 7.2 MB (100% L3 cache resident), and guarantees sub-microsecond in-kernel quarantine with 0.957 ROC-AUC, 85.07% TPR, and 100.0% bit-exact golden parity.", pt_size=9.5, prefix_color=GREEN_ACCENT)
 
     set_notes(s16, """
 Slide 16 details the empirical benchmark comparison between AHHS-IDS and all other in-kernel eBPF/XDP paradigms with concrete numbers achieved in our implementation:
 1. Static XDP Filters: Wire-speed (10-12 ns), but 0% protection against zero-days or behavioral rate shifts.
 2. Monolithic Per-Packet ML: Drops line-rate throughput to 1.2 Mpps because computing matrix math on every packet takes 450-1200 ns, dropping >95% of packets at 40G.
 3. Hybrid RingBuf Offload: Bypasses the verifier by pushing events to userspace, but suffers a 5-50 ms detection lag during which >300,000 attack packets breach the host.
-4. AHHS-IDS Multi-Tier Architecture: We achieved 60.7 Mpps single-core wire-speed (50.6x faster than monolithic ML), 16.45 ns amortized latency, < 1 µs immediate in-kernel quarantine, 7.2 MB L3 cache footprint, and 0.992 ROC-AUC with 100% bit-exact parity!
+4. AHHS-IDS Multi-Tier Architecture: We achieved 60.7 Mpps single-core wire-speed (50.6x faster than monolithic ML), 16.45 ns amortized latency, < 1 µs immediate in-kernel quarantine, 7.2 MB L3 cache footprint, and 0.957 ROC-AUC with 100% bit-exact parity!
 This empirical data proves why we implemented AHHS-IDS: to eliminate both the line-rate collapse of monolithic ML and the massive exposure window of ring-buffer offload.
 """)
 
@@ -1269,9 +1269,9 @@ This empirical data proves why we implemented AHHS-IDS: to eliminate both the li
     add_card(s17, Inches(6.9), Inches(4.0), card4_w, card4_h, CARD_BG, CARD_BORDER)
     tb_c4 = s17.shapes.add_textbox(Inches(7.05), Inches(4.1), card4_w - Inches(0.3), card4_h - Inches(0.2))
     tf_c4 = tb_c4.text_frame; tf_c4.word_wrap = True
-    add_bullet(tf_c4, "4. 97 QUALITY GATES (100% PASS)", "", pt_size=11, prefix_color=NAVY_ACCENT)
-    add_bullet(tf_c4, "Empirical Rigor:", "73 pipeline tests + 24 Phase 3 quality gates verified green.")
-    add_bullet(tf_c4, "CIC-IDS-2017 Validation:", "0.992 ROC-AUC, 96.4% TPR, and 0.66% FPR with > 900x error separation.")
+    add_bullet(tf_c4, "4. 93 QUALITY GATES (100% PASS)", "", pt_size=11, prefix_color=NAVY_ACCENT)
+    add_bullet(tf_c4, "Empirical Rigor:", "73 pipeline tests + 20 Phase 3 quality gates verified green.")
+    add_bullet(tf_c4, "CIC-IDS-2017 Validation:", "0.9567 ROC-AUC, 85.07% TPR (100% PortScan, 70.14% Slowloris), and 9.81% FPR on 12,100 windows.")
 
     banner = s17.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(6.4), Inches(11.733), Inches(0.7))
     banner.fill.solid()

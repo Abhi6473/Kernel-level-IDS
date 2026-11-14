@@ -95,7 +95,7 @@ The terminal will display the real-time telemetry dashboard:
        AHHS-IDS: REAL-TIME IN-KERNEL DEFENDER DASHBOARD (XDP / eBPF)        
        Multi-Tier Hybrid Architecture | Hook: eth0 (Zero-Copy)       
 ============================================================================
- Active Model: Slot 0 (592 Bytes) | Anomaly Threshold: θ = 20 | Double-Buffer: SYNCHRONIZED
+ Active Model: Slot 0 (592 Bytes) | Anomaly Threshold: θ = 58 | Double-Buffer: SYNCHRONIZED
 
 ┌── TIER 1: STATELESS WIRE-SPEED PRE-FILTER (bpf/tier1_tree.h) ───────────────┐
 │  • PASS (Known Benign Ports: 80, 443, 53, 123) : 0          packets        │
@@ -160,7 +160,7 @@ Select attack scenario [1-9]:
 
 ### Phase 3: Tier 3 In-Kernel Quantized Autoencoder & Dynamic Blocklisting
 - **Abhiram (Laptop 2)**: Selects option `4` (`Send Volumetric Flood`). Injects 150 packets to Port 8080 from fixed source port 49152.
-- **Vybhav (Laptop 1 Dashboard)**: *"Watch the dashboard closely! As packet 100 arrives, Tier 2 detects a full window, extracts 8 fixed-point `log2q3` features, and calls `bpf_tail_call()` into Tier 3. The 4-program neural network calculates the reconstruction error in pure integer math. Since `err = 36,872` exceeds threshold `θ = 20`, Tier 3 flags an `ANOMALY`. It drops the packet and inserts the 5-tuple into `ahhs_blocklist` with a 60-second TTL."*
+- **Vybhav (Laptop 1 Dashboard)**: *"Watch the dashboard closely! As packet 100 arrives, Tier 2 detects a full window, extracts 8 fixed-point `log2q3` features, and calls `bpf_tail_call()` into Tier 3. The 4-program neural network calculates the reconstruction error in pure integer math. Since `err = 36,872` exceeds threshold `θ = 58`, Tier 3 flags an `ANOMALY`. It drops the packet and inserts the 5-tuple into `ahhs_blocklist` with a 60-second TTL."*
 - **Abhiram (Laptop 2)**: Selects option `5` (`Verify Quarantine Enforcement`). Tries to send 30 more packets from port 49152.
 - **Vybhav (Laptop 1 Dashboard)**: *"Notice that even though the attacker is still sending packets, they are immediately dropped at the Tier 1 ingress fast-path (~12 ns) because of the active blocklist entry. They never reach Tier 2 or Tier 3 again."*
 

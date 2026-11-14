@@ -231,7 +231,7 @@ def render_dashboard(state: LiveState, iface: str):
     out.append("=" * 76)
 
     # Active buffer status
-    status_buf = f"Active Model: {BOLD}Slot {state.active_model_idx}{RESET} (592 Bytes) | Anomaly Threshold: {BOLD}θ = 20{RESET} | Double-Buffer: {GREEN}SYNCHRONIZED{RESET}"
+    status_buf = f"Active Model: {BOLD}Slot {state.active_model_idx}{RESET} (592 Bytes) | Anomaly Threshold: {BOLD}θ = 58{RESET} | Double-Buffer: {GREEN}SYNCHRONIZED{RESET}"
     out.append(f" {status_buf}\n")
 
     # Tier 1 Card

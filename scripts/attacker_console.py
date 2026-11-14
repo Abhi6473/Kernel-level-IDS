@@ -79,7 +79,7 @@ def menu_volumetric_flood(target_ip: str):
     print("Expected Behavior on Laptop 1:")
     print("  1. Packets 1-99 accumulate in Tier 2 sliding window.")
     print("  2. Packet 100 triggers window completion and BPF tail call into Tier 3.")
-    print("  3. Tier 3 Quantized Autoencoder computes reconstruction error (err = 36,872 > θ=20).")
+    print("  3. Tier 3 Quantized Autoencoder computes reconstruction error (err = 36,872 > θ=58).")
     print("  4. Flow 49152 -> 8080 is DROPPED and dynamically inserted into ahhs_blocklist for 60s!")
     send_udp_stream(target_ip, dst_port=8080, src_port=49152, count=150, delay_s=0.005, payload_size=64, label="High-Rate Burst Flood")
 

@@ -179,12 +179,9 @@ Before your presentation, run these automated verification commands:
 # 1. Run 73 unit & pipeline tests (100% pass)
 make test
 
-# 2. Run 24 quality gate & mathematical sanity tests (100% pass)
+# 2. Run 20 quality gate & mathematical sanity tests (100% pass)
 python3 tests/test_phase3_quality.py
 
-# 3. Run 240 golden trace vectors over baseline model (100% bit parity)
+# 3. Run 240 golden trace vectors over CIC-IDS-2017 model (100% bit parity)
 make selftest
-
-# 4. Run 240 golden trace vectors over real-data model (100% bit parity)
-python3 tests/run_selftest.py --model models/ahhs_model_real.bin --golden models/golden_tier3_real.json
 ```

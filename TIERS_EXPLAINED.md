@@ -156,11 +156,11 @@ To perform deep non-linear anomaly detection on 100-packet flow windows entirely
     If $\text{err} > \theta$: flags `AHHS_STAT_ANOMALY`, writes 5-tuple to `ahhs_blocklist` with 60-second TTL, returns `XDP_DROP`.  
     If $\text{err} \le \theta$: flags `AHHS_STAT_NORMAL`, returns `XDP_PASS`.
   - `ahhs_t3_selftest`: Pinned self-test entrypoint executing 240 golden trace vectors with bit-exact validation.
-- **`scripts/train_tier3.py`**:
-  - Trains PyTorch Quantization-Aware Training (QAT) autoencoder strictly on benign normal traffic.
+- **`AHHS_CICIDS2017_Exhaustive_Training.ipynb` & `scripts/build_cicids2017_notebook.py`**:
+  - Ingests official Canadian Institute for Cybersecurity (CIC-IDS-2017) datasets.
+  - Trains PyTorch Quantization-Aware Training (QAT) autoencoder strictly on Monday benign network traffic.
   - Uses Straight-Through Estimators (STE) and Exponential Moving Averages (EMA) to track quantization scale boundaries.
-- **`scripts/export_tier3.py`**:
-  - Calibrates $\theta$ at 99th percentile of benign validation traffic.
+  - Calibrates $\theta = 58$ on benign validation traffic.
   - Quantizes weights to int8, biases to int16, and packs model into exact 592-byte binary format (`models/ahhs_model.bin`).
   - Generates 240 golden trace vectors (`models/golden_tier3.json`).
 - **`scripts/ref_int_forward.py`**:

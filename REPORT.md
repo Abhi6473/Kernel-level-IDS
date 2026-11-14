@@ -30,7 +30,7 @@ AHHS-IDS was designed and implemented specifically to break this in-kernel deadl
 - **Achieved Quarantine Reaction**: **$< 1\text{ }\mu\text{s}$ immediate in-kernel blocklist drop** (**$0$ packets breach the host** after detection).
 - **In-Kernel Memory Allocation**: **$592\text{ B}$ model binary** + **$7.2\text{ MB}$ total BPF maps** (100% CPU L3 cache resident).
 - **Verifier Instruction Safety**: **$< 600$ total BPF instructions across 4 tail calls** (well within the 1,000,000 verifier limit).
-- **Detection Rigor**: **$0.992\text{ ROC-AUC}$**, **$96.4\%\text{ TPR}$**, **$0.66\%\text{ FPR}$**, and **$>900\times$ error separation margin**.
+- **Detection Rigor**: **$0.9567\text{ ROC-AUC}$**, **$85.07\%\text{ Overall TPR}$**, **$100.00\%\text{ PortScan Detection}$**, **$70.14\%\text{ DoS Slowloris Detection}$**, and **$9.81\%\text{ FPR}$** at calibrated in-kernel threshold $\theta = 58$.
 
 AHHS-IDS resolves this trade-off by deploying a **three-tier hierarchical defense** entirely in the Linux kernel data path using **eBPF (Extended Berkeley Packet Filter) and XDP (eXpress Data Path)**:
 1. **Tier 1 (Stateless Pre-Filter)**: A static, verifier-safe C decision tree classifying known ports at wire speed ($O(1)$) into `PASS` (e.g., ports 80, 443, 53, 123), `DROP` (e.g., ports 23, 4444, 1337, 2323, 31337), or `AMBIGUOUS`.
@@ -40,8 +40,8 @@ AHHS-IDS resolves this trade-off by deploying a **three-tier hierarchical defens
 
 ### Key Empirical Results
 - **In-Kernel Verification**: **240 / 240 golden trace vectors (100.0%)** verified inside the Linux 6.8 kernel with bit-exact parity against the reference model.
-- **Detection Quality (Baseline)**: **ROC-AUC: 1.000**, **TPR @ $\theta$: 98.6%**, **FPR @ $\theta$: 0.66%** ($\theta = 20$) across 1,608 held-out test windows.
-- **CIC-IDS-2017 Real-World Dataset Pipeline**: Turnkey Google Colab notebook (`AHHS_CICIDS2017_Exhaustive_Training.ipynb`) training the pipeline on real Canadian Institute for Cybersecurity network traffic with calibrated thresholding and 300-DPI reporting.
+- **Detection Quality (Official CIC-IDS-2017 Dataset)**: **ROC-AUC: 0.9567**, **Overall TPR @ $\theta$: 85.07%**, **PortScan TPR: 100.00%**, **DoS Slowloris TPR: 70.14%**, **FPR @ $\theta$: 9.81%** ($\theta = 58$) across 12,100 held-out test windows (1,210,000 packets).
+- **Turnkey Training Pipeline**: Standalone Google Colab notebook (`AHHS_CICIDS2017_Exhaustive_Training.ipynb`) and generator (`scripts/build_cicids2017_notebook.py`) training the pipeline directly on official Canadian Institute for Cybersecurity network traffic with calibrated thresholding and 300-DPI reporting.
 - **Live Ingress Enforcement**: Successfully demonstrated in-kernel traffic filtering, 100-packet window trigger, atomic window reset, autoencoder anomaly drop, and active 60-second blocklisting.
 
 ---
@@ -106,7 +106,7 @@ AHHS-IDS resolves this trade-off by deploying a **three-tier hierarchical defens
     │   [Program 3: ahhs_t3_l4] ──► Dense Layer 4: 16 →  8 (Linear Reconstruction)       │
     │                               Compute err = Σ(x_q[i] - y[i])²                      │
     │                                                                                    │
-    │                                        err > θ (20)?                               │
+    │                                        err > θ (58)?                               │
     │                                              │                                     │
     │                            ┌─────────────────┴─────────────────┐                   │
     │                            ▼                                   ▼                   │
@@ -310,13 +310,7 @@ ebpf/
 ├── models/                                  # Model Binaries, Golden Traces & Checkpoints
 │   ├── ahhs_model.bin                       # 592-byte in-kernel model binary (CIC-IDS-2017, theta=58)
 │   ├── golden_tier3.json                    # 240 bit-exact verification vectors (100% parity)
-│   ├── evaluation_summary.json              # Real CIC-IDS-2017 metrics (ROC-AUC 0.957, TPR 85.1%)
-│   └── cicids2017/                          # Turnkey deployment archive for CIC-IDS-2017
-│       ├── ahhs_model.bin                   # Bit-identical in-kernel model payload
-│       ├── golden_tier3.json                # 240 golden trace vectors
-│       ├── tier1_tree.h                     # Static inline decision tree header
-│       ├── evaluation_summary.json          # Metric summary json
-│       └── ahhs_cicids2017_report.png       # 300-DPI publication dashboard
+│   └── evaluation_summary.json              # Official CIC-IDS-2017 metrics (ROC-AUC 0.957, TPR 85.1%)
 │
 ├── data/                                    # Dataset directory (.gitkeep)
 │   └── .gitkeep
@@ -337,7 +331,7 @@ ebpf/
 
 ## 7. Conclusion & References
 
-Phase 3 of AHHS-IDS demonstrates that complex, stateful deep learning anomaly detection can be successfully executed inside the Linux kernel data path without floating-point hardware support and without exceeding strict eBPF verifier limits. By chaining four smaller BPF programs through tail-calls, managing inter-layer activations via per-CPU scratch maps, and applying integer requantization, the system achieves **100% bit-exact equivalence to userspace reference models, 98.6% detection rate with under 0.7% false alarms, and wire-speed packet blocking**.
+Phase 3 of AHHS-IDS demonstrates that complex, stateful deep learning anomaly detection can be successfully executed inside the Linux kernel data path without floating-point hardware support and without exceeding strict eBPF verifier limits. By chaining four smaller BPF programs through tail-calls, managing inter-layer activations via per-CPU scratch maps, and applying integer requantization, the system achieves **100% bit-exact equivalence to userspace reference models, 85.07% detection rate on official CIC-IDS-2017 benchmark traffic (100.00% PortScan, 70.14% DoS Slowloris) with 0.9567 ROC-AUC, and wire-speed packet blocking**.
 
 ### References
 1. **Zhang et al. (DSN 2024)**: *Chained eBPF Tail Calls for High-Throughput In-Kernel Packet Processing*. Design inspiration for program splitting and state passing via scratch maps.

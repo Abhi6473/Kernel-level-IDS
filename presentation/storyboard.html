@@ -220,7 +220,7 @@
             </div>
             <div>
               <h3 id="title-tier3" class="font-bold text-sm text-white">Tier 3: AI X-Ray Body Scanner (Autoencoder)</h3>
-              <p id="sub-tier3" class="text-xs text-slate-400">Reconstructs traffic signal: if reconstruction error &gt; 20, alarm triggers!</p>
+              <p id="sub-tier3" class="text-xs text-slate-400">Reconstructs traffic signal: if reconstruction error &gt; 58, alarm triggers!</p>
             </div>
           </div>
           <span id="status-tier3" class="text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
@@ -262,7 +262,7 @@
             
             <div class="flex items-baseline gap-1 my-1">
               <span id="meter-score" class="text-4xl font-black font-mono text-slate-500 tracking-tight">0</span>
-              <span class="text-xs text-slate-500 font-mono">/ θ=20</span>
+              <span class="text-xs text-slate-500 font-mono">/ θ=58</span>
             </div>
 
             <div class="w-full bg-slate-900 h-2.5 rounded-full border border-slate-800 overflow-hidden my-1">
@@ -304,11 +304,11 @@
     </div>
     <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
       <span class="text-xs text-slate-400 block">AI Accuracy (AUC)</span>
-      <span class="text-lg font-black text-white font-mono">1.000 (100%)</span>
+      <span class="text-lg font-black text-white font-mono">0.957 (95.7%)</span>
     </div>
     <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
       <span class="text-xs text-slate-400 block">False Alarms (FPR)</span>
-      <span class="text-lg font-black text-emerald-400 font-mono">0.66%</span>
+      <span class="text-lg font-black text-emerald-400 font-mono">9.81%</span>
     </div>
     <div class="bg-slate-900/50 border border-slate-800/80 p-3 rounded-xl">
       <span class="text-xs text-slate-400 block">Kernel Bit-Parity</span>
@@ -349,7 +349,7 @@
         type: 'ambiguous_attack',
         name: 'Stealthy Disguised Flood (Port 8080)',
         simpleDesc: 'Disguised traveler with no badge. Directed to the Observation Lobby. After watching 100 packets, the AI Body Scanner discovers weaponized flood patterns and slams the 60-second security lockdown!',
-        techDesc: 'Tier 1 marks port 8080 as AMBIGUOUS. Tier 2 tracks 100-packet window in flow_lru_map. At packet 100, BPF tail-calls Tier 3 autoencoder. Error 1904 > 20 triggers XDP_DROP and inserts flow into ahhs_blocklist.',
+        techDesc: 'Tier 1 marks port 8080 as AMBIGUOUS. Tier 2 tracks 100-packet window in flow_lru_map. At packet 100, BPF tail-calls Tier 3 autoencoder. Error 1904 > 58 triggers XDP_DROP and inserts flow into ahhs_blocklist.',
         tier1Result: 'AMBIGUOUS',
         tier1Color: 'amber',
         stopsAtTier1: false,
@@ -533,8 +533,8 @@
           bannerBlocklist.classList.remove('hidden');
 
           narrative.innerHTML = isTechnical
-            ? '🚨 <strong>Anomaly Verdict (err=1904 &gt; θ=20)</strong>: Packet dropped via XDP_DROP. Flow key <code>127.0.0.1:40000 -> 8080</code> written to <code>ahhs_blocklist</code> for 60 seconds.'
-            : '🚨 <strong>Alarm Triggered!</strong> The AI could not recognize the weird traffic shape (Error 1,904 vs safe limit 20). The attacker is ejected and their ID is locked out for 60 seconds!';
+            ? '🚨 <strong>Anomaly Verdict (err=1904 &gt; θ=58)</strong>: Packet dropped via XDP_DROP. Flow key <code>127.0.0.1:40000 -> 8080</code> written to <code>ahhs_blocklist</code> for 60 seconds.'
+            : '🚨 <strong>Alarm Triggered!</strong> The AI could not recognize the weird traffic shape (Error 1,904 vs safe limit 58). The attacker is ejected and their ID is locked out for 60 seconds!';
         }, 1200);
       }
 
