@@ -146,18 +146,6 @@ dump-flows:
 	@echo "==> Dumping Tier 2 LRU Flow Map..."
 	sudo $(BPFTOOL) map dump name flow_lru_map 2>/dev/null || true
 
-# Interactive multi-tier demonstration
-demo:
-	PYTHONPATH=$(SCRIPTS_DIR):$(TESTS_DIR):. $(PYTHON) $(SCRIPTS_DIR)/demonstrate.py
-
-# Live 2-laptop defender dashboard (Laptop 1)
-monitor:
-	sudo PYTHONPATH=$(SCRIPTS_DIR):$(TESTS_DIR):. $(PYTHON) $(SCRIPTS_DIR)/detector_dashboard.py --iface $(IFACE)
-
-# Live 2-laptop attack console (Laptop 2)
-attack:
-	PYTHONPATH=$(SCRIPTS_DIR):$(TESTS_DIR):. $(PYTHON) $(SCRIPTS_DIR)/attacker_console.py
-
 # Comprehensive test suite
 test:
 	PYTHONPATH=$(SCRIPTS_DIR):$(TESTS_DIR):. $(PYTHON) $(TESTS_DIR)/test_pipeline.py
@@ -167,4 +155,4 @@ test:
 clean:
 	rm -rf $(XDP_OBJ) $(TIER3_OBJ) $(LINKED_OBJ) $(LOADER_BIN)
 
-.PHONY: all load unload dump-stats dump-flows clean notebook selftest selftest-live test demo monitor attack
+.PHONY: all load unload dump-stats dump-flows clean notebook selftest selftest-live test

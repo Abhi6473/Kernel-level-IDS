@@ -274,13 +274,12 @@ The empirical comparison above demonstrates why AHHS-IDS was conceived and imple
 
 ```text
 ebpf/
-├── Makefile                                 # Multi-target build, test & demo orchestration
-├── README_phase3.md                         # Technical setup & Linux verification guide
+├── Makefile                                 # Multi-target build, test & verification orchestration
+├── README.md                                # Comprehensive deployment and operation guide
 ├── REPORT.md                                # This final project report
-├── DEMO.md                                  # Comprehensive 5-mode demonstration walkthrough guide
-├── TWO_LAPTOP_DEMO.md                       # Complete 2-laptop live demonstration & examination guide
 ├── TIERS_EXPLAINED.md                       # Complete Tier 1, Tier 2, Tier 3 architectural guide
 ├── AHHS_CICIDS2017_Exhaustive_Training.ipynb # Turnkey Google Colab notebook for CIC-IDS-2017
+├── vm_setup_and_run.sh                      # Turnkey VM environment provisioning script
 │
 ├── bpf/                                     # Linux Kernel eBPF/XDP C Source & Headers
 │   ├── xdp_ahhs_tier1.c                     # Modular Tier 1 Decision Tree & Tier 2 LRU Window Tracker
@@ -291,16 +290,11 @@ ebpf/
 │   └── load_pipeline.sh                     # Automated loader, model injector & fallback controller
 │
 ├── scripts/                                 # Python ML Training, Features & Export Pipelines
-│   ├── demonstrate.py                       # Turnkey terminal interactive demonstration script
-│   ├── detector_dashboard.py                # Laptop 1 (Defender) real-time in-kernel live dashboard
-│   ├── attacker_console.py                  # Laptop 2 (Attacker) interactive intrusion console
 │   ├── train_tier1.py                       # Tier 1 decision tree trainer (port-based)
+│   ├── build_cicids2017_notebook.py         # Generator script for CIC-IDS-2017 Colab notebook
 │   ├── ref_int_forward.py                   # Bit-identical integer reference forward pass
 │   ├── ahhs_features.py                     # Fixed-point feature extractor & simulator
-│   ├── build_cicids2017_notebook.py         # Generator script for CIC-IDS-2017 Colab notebook
-│   ├── generate_defense_pptx.py             # Generator script for 18-slide defense PowerPoint
-│   ├── send_traffic.py                      # Live network traffic generator
-│   └── forward_to_vm.py                     # Two-laptop UDP/TCP port forwarding proxy
+│   └── send_traffic.py                      # Live network traffic generator for pipeline testing
 │
 ├── tests/                                   # Automated Quality & Verification Harnesses
 │   ├── test_pipeline.py                     # 73-test end-to-end integration suite
@@ -315,16 +309,10 @@ ebpf/
 ├── data/                                    # Dataset directory (.gitkeep)
 │   └── .gitkeep
 │
-├── docs/                                    # Project guidelines, term paper & evaluation figures
-│   ├── ahhs_cicids2017_report.png           # 300 DPI publication evaluation dashboard
-│   ├── Term Paper and Term  Project Guideline.pdf
-│   └── USP_Project_term_paper.pdf
-│
-└── presentation/                            # Defense Presentation Slides & Interactive UI
-    ├── AHHS_IDS_Comprehensive_Architecture_and_Defense.pptx # 18-Slide Academic Defense Presentation
-    ├── index.html                           # Live animated packet flow & telemetry dashboard
-    ├── storyboard.html                      # Interactive presentation storyboard
-    └── PRESENTATION.md                      # Comprehensive slide-by-slide speaker notes & defense guide
+└── docs/                                    # Project guidelines, term paper & evaluation figures
+    ├── ahhs_cicids2017_report.png           # 300 DPI publication evaluation dashboard
+    ├── Term Paper and Term  Project Guideline.pdf
+    └── USP_Project_term_paper.pdf
 ```
 
 ---
