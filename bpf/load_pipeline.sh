@@ -33,8 +33,8 @@ fi
 
 # Ensure model binary exists
 if [[ ! -f "${MODEL_BIN}" ]]; then
-    echo "[!] Model binary '${MODEL_BIN}' not found. Exporting..."
-    python3 export_tier3.py --model models/tier3_model.pt --data data/ --out . 2>/dev/null || true
+    echo "[ERROR] Model binary '${MODEL_BIN}' not found. Please ensure 'models/ahhs_model.bin' exists."
+    exit 1
 fi
 
 # Prefer dedicated libbpf loader if compiled

@@ -1,31 +1,35 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-.ipynb_checkpoints/
 
-# macOS / OS metadata
+# C / Object files
+*.o
+*.so
+*.dylib
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# OS generated files
 .DS_Store
-.AppleDouble
-.LSOverride
+.DS_Store?
 ._*
 Thumbs.db
 
-# Datasets and raw captures (rely on official CIC-IDS-2017 remote downloads)
+# Datasets and raw captures
 cic_data/
 *.csv
 *.pcap
-*.npz
 
-# BPF & C build artifacts
+# BPF and Model build artifacts
 bpf/*.o
 ahhs.o
 ahhs_loader
+ahhs_model.bin
 *.dSYM/
 
 # IDE / Editors
@@ -33,5 +37,6 @@ ahhs_loader
 .idea/
 *.swp
 *~
-ahhs_model.bin
-ahhs_loader
+
+# Local private docs/presentations
+docs/

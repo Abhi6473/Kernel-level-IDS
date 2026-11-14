@@ -140,11 +140,7 @@ Trained and evaluated on **12,100 held-out windows (1,210,000 packets)** from th
 ```text
 ebpf/
 ├── Makefile                                 # Build, test & deployment orchestration
-├── README.md                                # This deployment and user guide
-├── REPORT.md                                # Academic term project final report
-├── TIERS_EXPLAINED.md                       # Comprehensive Tier 1, 2, 3 architectural guide
-├── AHHS_CICIDS2017_Exhaustive_Training.ipynb# Turnkey Google Colab training notebook
-├── vm_setup_and_run.sh                      # Turnkey VM environment provisioning script
+├── README.md                                # Deployment and user guide
 │
 ├── bpf/                                     # Linux Kernel eBPF/XDP C Source & Headers
 │   ├── xdp_ahhs_tier1.c                     # Modular Tier 1 Decision Tree & Tier 2 LRU Window Tracker
@@ -152,32 +148,26 @@ ebpf/
 │   ├── ahhs_common.h                        # Shared BPF maps, structs (592B model), fixed-point math
 │   ├── tier1_tree.h                         # Generated port-based static inline C decision tree
 │   ├── ahhs_loader.c                        # Userspace libbpf loader & program array linker
-│   └── load_pipeline.sh                     # Automated loader, model injector & fallback controller
+│   └── load_pipeline.sh                     # Fallback loader & controller script
 │
-├── scripts/                                 # Python ML Training, Features & Export Pipelines
+├── scripts/                                 # Production Utilities
 │   ├── train_tier1.py                       # Tier 1 decision tree trainer (port-based)
-│   ├── build_cicids2017_notebook.py         # Generator script for CIC-IDS-2017 Colab notebook
-│   ├── ref_int_forward.py                   # Bit-identical integer reference forward pass
-│   ├── ahhs_features.py                     # Fixed-point feature extractor & simulator
 │   └── send_traffic.py                      # Live network traffic generator for pipeline testing
 │
 ├── tests/                                   # Automated Quality & Verification Harnesses
 │   ├── test_pipeline.py                     # 73-test end-to-end integration suite
 │   ├── test_phase3_quality.py               # 20-test CIC-IDS-2017 quality regression suite
-│   └── run_selftest.py                      # 240 golden vector bit-exact verification harness
+│   ├── run_selftest.py                      # 240 golden vector bit-exact verification harness
+│   ├── ref_int_forward.py                   # Bit-identical integer reference forward pass
+│   └── ahhs_features.py                     # Fixed-point feature extractor & simulator
 │
 ├── models/                                  # Model Binaries, Golden Traces & Checkpoints
 │   ├── ahhs_model.bin                       # 592-byte in-kernel model binary (CIC-IDS-2017, theta=58)
 │   ├── golden_tier3.json                    # 240 bit-exact verification vectors (100% parity)
 │   └── evaluation_summary.json              # Official CIC-IDS-2017 metrics (ROC-AUC 0.957, TPR 85.1%)
 │
-├── data/                                    # Dataset directory (.gitkeep)
-│   └── .gitkeep
-│
-└── docs/                                    # Project guidelines, term paper & evaluation figures
-    ├── ahhs_cicids2017_report.png           # 300 DPI publication evaluation dashboard
-    ├── Term Paper and Term  Project Guideline.pdf
-    └── USP_Project_term_paper.pdf
+└── data/                                    # Dataset directory (.gitkeep)
+    └── .gitkeep
 ```
 
 ---

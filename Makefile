@@ -42,27 +42,14 @@ CFLAGS = -O2 -g -Wall -Wextra -target bpf -D__TARGET_ARCH_$(ARCH) -I$(BPF_DIR) -
 LOADER_CFLAGS = -O2 -Wall -I$(BPF_DIR) -I.
 LOADER_LDFLAGS = -lbpf -lelf -lz
 
-all: $(LINKED_OBJ) $(LOADER_BIN) ensure-model
-
-ensure-model:
-	@if [ ! -f "ahhs_model.bin" ]; then \
-		if [ -f "$(MODELS_DIR)/ahhs_model.bin" ]; then \
-			cp $(MODELS_DIR)/ahhs_model.bin ahhs_model.bin; \
-			echo "==> Copied $(MODELS_DIR)/ahhs_model.bin -> ahhs_model.bin"; \
-		fi; \
-	fi
+all: $(LINKED_OBJ) $(LOADER_BIN)
 
 # 1. Train Decision Tree and generate tier1_tree.h (preserve existing header if python deps missing)
 $(TREE_HEADER):
 	@if [ ! -f "$@" ]; then \
 		echo "==> Generating $(TREE_HEADER)..."; \
-		PYTHONPATH=$(SCRIPTS_DIR):. $(PYTHON) $(TRAIN_PY) 2>/dev/null || { \
-			if [ -f "/home/ubuntu/ebpf_host/bpf/tier1_tree.h" ]; then \
-				cp /home/ubuntu/ebpf_host/bpf/tier1_tree.h $@; \
-				echo "==> Restored $(TREE_HEADER) from host mount"; \
-			else \
-				echo "==> [ERROR] Cannot build $(TREE_HEADER): missing numpy/scikit-learn and no backup header"; exit 1; \
-			fi; \
+		PYTHONPATH=$(SCRIPTS_DIR):$(TESTS_DIR):. $(PYTHON) $(TRAIN_PY) || { \
+			echo "==> [ERROR] Cannot build $(TREE_HEADER): missing numpy/scikit-learn/emlearn"; exit 1; \
 		}; \
 	fi
 
@@ -84,11 +71,14 @@ $(TIER3_OBJ): $(TIER3_C) $(COMMON_HEADER)
 $(LINKED_OBJ): $(XDP_OBJ) $(TIER3_OBJ)
 	@echo "==> Linking $(XDP_OBJ) and $(TIER3_OBJ) into $(LINKED_OBJ) via bpftool..."
 	@if command -v $(BPFTOOL) >/dev/null 2>&1; then \
-		$(BPFTOOL) gen object $@ $(XDP_OBJ) $(TIER3_OBJ) && \
-		echo "==> Successfully generated combined BPF object: $(LINKED_OBJ)" || \
-		{ rm -f $@; echo "==> [ERROR] bpftool gen object failed"; exit 1; }; \
+		$(BPFTOOL) gen object $@ $(XDP_OBJ) $(TIER3_OBJ) 2>/dev/null && \
+		echo "==> Successfully generated combined BPF object: $(LINKED_OBJ)" || { \
+			echo "==> [ERROR] 'bpftool gen object' failed. Requires bpftool >= 6.1 (Linux kernel >= 5.15)."; \
+			echo "    Install bpftool on Debian/Ubuntu: sudo apt-get install -y bpftool linux-tools-common"; \
+			exit 1; \
+		}; \
 	else \
-		echo "==> [NOTICE] bpftool not available locally; $(LINKED_OBJ) creation requires bpftool on Linux"; \
+		echo "==> [NOTICE] bpftool not found locally; $(LINKED_OBJ) creation requires bpftool on Linux."; \
 	fi
 
 # 5. Build userspace libbpf loader (§8)
@@ -100,10 +90,6 @@ $(LOADER_BIN): $(LOADER_C) $(COMMON_HEADER)
 	else \
 		echo "==> [NOTICE] ahhs_loader targets Linux libbpf; skip native build on non-Linux host"; \
 	fi
-
-# Generate turnkey Google Colab CIC-IDS-2017 training notebook
-notebook:
-	PYTHONPATH=$(SCRIPTS_DIR):. $(PYTHON) $(SCRIPTS_DIR)/build_cicids2017_notebook.py
 
 # Load pipeline using libbpf loader or bash script
 load: $(LINKED_OBJ)
@@ -153,6 +139,6 @@ test:
 
 # Clean build artifacts
 clean:
-	rm -rf $(XDP_OBJ) $(TIER3_OBJ) $(LINKED_OBJ) $(LOADER_BIN)
+	rm -rf $(XDP_OBJ) $(TIER3_OBJ) $(LINKED_OBJ) $(LOADER_BIN) ahhs_model.bin
 
-.PHONY: all load unload dump-stats dump-flows clean notebook selftest selftest-live test
+.PHONY: all load unload dump-stats dump-flows clean selftest selftest-live test
