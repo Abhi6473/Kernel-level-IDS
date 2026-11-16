@@ -28,7 +28,8 @@ import struct
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report
-import emlearn
+
+# Note: emlearn is imported lazily inside main() to allow module imports without emlearn installed
 
 # Restore standard IEEE 754 numerical handling (emlearn alters errstate during import)
 np.seterr(all="ignore")
@@ -199,6 +200,14 @@ def main():
         print(f"      - {fname}: {imp * 100:.2f}%")
 
     # 3. Transpile to C using emlearn
+    try:
+        import emlearn
+    except ImportError:
+        print("[!] Error: 'emlearn' is required to transpile the tree to C.")
+        print("    Install it via: pip install emlearn")
+        import sys
+        sys.exit(1)
+
     print("[+] Transpiling Decision Tree to C code using emlearn (method='inline')...")
     model = emlearn.convert(clf, method='inline', dtype='uint32_t')
     raw_c = model.save(name='tier1_tree')

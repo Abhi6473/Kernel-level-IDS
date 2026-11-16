@@ -226,7 +226,7 @@ int main(int argc, char **argv)
         bpf_object__close(obj);
         return 1;
     }
-    /* FIX: programs must be pinned too -- run_selftest.py uses prog_ahhs_t3_selftest.
+    /* Programs are pinned by function name for telemetry and self-test verification.
      * Pin each program explicitly by FUNCTION name (all layers share SEC("xdp"), so
      * relying on libbpf's section-derived pin names would collide). */
     {
@@ -254,11 +254,11 @@ int main(int argc, char **argv)
     }
 
     int t1_fd = bpf_program__fd(t1_prog);
-    __u32 xdp_flags = XDP_FLAGS_SKB_MODE; /* Safe generic XDP mode */
+    __u32 xdp_flags = XDP_FLAGS_DRV_MODE; /* Attempt line-rate native driver mode first */
     err = bpf_xdp_attach(ifindex, t1_fd, xdp_flags, NULL);
     if (err) {
-        /* Try DRV mode if SKB fails */
-        xdp_flags = XDP_FLAGS_DRV_MODE;
+        printf("[!] Native driver mode unavailable; falling back to generic SKB mode...\n");
+        xdp_flags = XDP_FLAGS_SKB_MODE;
         err = bpf_xdp_attach(ifindex, t1_fd, xdp_flags, NULL);
     }
 

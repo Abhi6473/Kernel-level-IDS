@@ -27,9 +27,9 @@ cic_data/
 
 # BPF and Model build artifacts
 bpf/*.o
-ahhs.o
-ahhs_loader
-ahhs_model.bin
+/ahhs.o
+/ahhs_loader
+/ahhs_model.bin
 *.dSYM/
 
 # IDE / Editors

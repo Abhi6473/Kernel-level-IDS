@@ -59,7 +59,7 @@
 
 #define AHHS_ACTION_NON_IPV4   -1
 #define AHHS_ACTION_MANAGEMENT -2
-#define AHHS_STALE_WINDOW_NS   10000000000ULL /* 10-second timeout for inactive flows */
+#define AHHS_STALE_WINDOW_NS   60000000000ULL /* 60-second idle timeout for inactive flows */
 
 /* -------------------------------------------------------------------------
  * Tier 1 Telemetry Map
@@ -142,6 +142,11 @@ static __always_inline int tier1_prefilter(
         return TIER1_ACTION_PASS;
     }
 
+    /* Fragmented packets: non-first fragments do not contain L4 TCP/UDP headers */
+    if (iph->frag_off & bpf_htons(0x1FFF)) {
+        return TIER1_ACTION_PASS;
+    }
+
     void *l4_hdr = (void *)iph + ip_hlen;
     if (l4_hdr > data_end) {
         return TIER1_ACTION_PASS;
@@ -186,9 +191,14 @@ static __always_inline int tier1_prefilter(
     key->dst_port = dst_port;
     key->protocol = protocol;
 
-    /* Filter non-target traffic: background OS services (DHCP, SSH, etc.) pass silently without altering IDS telemetry */
-    if (!is_ids_target_port(dst_port) || src_port == 22 || dst_port == 22) {
+    /* Management traffic: allow incoming SSH to host management port without triggering IDS */
+    if (dst_port == 22) {
         return AHHS_ACTION_MANAGEMENT;
+    }
+
+    /* Unlisted ports: route to Tier 2/3 for anomaly inspection rather than silently bypassing */
+    if (!is_ids_target_port(dst_port)) {
+        return TIER1_ACTION_AMBIGUOUS;
     }
 
     /* Compute IP-level packet length (excluding 14-byte Ethernet header) */
@@ -305,8 +315,8 @@ static __always_inline int tier2_process_window(
         }
     }
 
-    /* ----- (f) Stale Window Handling ----- */
-    if ((current_time - flow->w_start_ns) > AHHS_STALE_WINDOW_NS &&
+    /* ----- (f) Stale Window Handling: reset only if connection was completely idle for > 60s ----- */
+    if ((current_time - flow->last_seen_ns) > AHHS_STALE_WINDOW_NS &&
         flow->w_pkts < AHHS_MIN_PKTS) {
         flow->w_pkts       = 0;
         flow->w_bytes      = 0;
@@ -341,6 +351,17 @@ int xdp_ahhs_tier1(struct xdp_md *ctx)
 
     if (action == AHHS_ACTION_MANAGEMENT) {
         return XDP_PASS; /* Silent management passthrough: keep SSH alive without polluting IDS telemetry */
+    }
+
+    /* Fast-Path Blocklist Check: drop quarantined flows at pipeline ingress */
+    __u64 current_time = bpf_ktime_get_ns();
+    __u64 *bl_expiry = bpf_map_lookup_elem(&ahhs_blocklist, &key);
+    if (bl_expiry) {
+        if (*bl_expiry > current_time) {
+            ahhs_stat_inc(AHHS_STAT_BLOCKHIT);
+            return XDP_DROP;
+        }
+        bpf_map_delete_elem(&ahhs_blocklist, &key);
     }
 
     if (action == TIER1_ACTION_DROP) {

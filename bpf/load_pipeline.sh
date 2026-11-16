@@ -55,8 +55,12 @@ if [[ -f "${LINKED_OBJ}" ]]; then
     TARGET_OBJ="${LINKED_OBJ}"
 elif [[ -f "${TIER1_OBJ}" && -f "${TIER3_OBJ}" ]]; then
     echo "[*] Generating combined object ${LINKED_OBJ} via bpftool..."
-    bpftool gen object "${LINKED_OBJ}" "${TIER1_OBJ}" "${TIER3_OBJ}" 2>/dev/null || TARGET_OBJ="${TIER1_OBJ}"
-    TARGET_OBJ="${LINKED_OBJ}"
+    if bpftool gen object "${LINKED_OBJ}" "${TIER1_OBJ}" "${TIER3_OBJ}"; then
+        TARGET_OBJ="${LINKED_OBJ}"
+    else
+        echo "[!] 'bpftool gen object' failed; falling back to ${TIER1_OBJ}"
+        TARGET_OBJ="${TIER1_OBJ}"
+    fi
 else
     echo "[!] Object files not found. Compiling via make..."
     make all

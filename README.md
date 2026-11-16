@@ -33,10 +33,10 @@ Existing kernel-level IDSes face a severe architectural dilemma:
 
 
 AHHS-IDS breaks this deadlock through **hierarchical stateful amortization**:
-- **Tier 1 (Stateless Wire-Speed Pre-Filter)**: A branchless C decision tree classifying known ports in **$11.8\text{ ns}$** ($O(1)$) directly at NIC driver ingress, resolving ~90% of traffic.
+- **Tier 1 (Stateless Wire-Speed Pre-Filter)**: A shallow C decision tree classifying known ports in **$11.8\text{ ns}$** ($O(1)$) directly at NIC driver ingress, resolving ~90% of traffic.
 - **Tier 2 (Stateful LRU Sliding Window)**: An LRU hash map (`flow_lru_map`, 65,536 capacity) tracking connection states and accumulating flow statistics over 100 packets or 1.0 second in **$45\text{ ns}$**.
 - **Tier 3 (Deep In-Kernel Quantized Autoencoder)**: A 4-program, tail-call-chained neural network ($8 \to 16 \to 4 \to 16 \to 8$, 428 parameters, 592 bytes) running pure integer $Q_{24}$ arithmetic without floating-point registers. Amortized cost is just **$3.42\text{ ns}$ per packet**.
-- **Immediate In-Kernel Quarantine**: Anomalous flows ($\text{err} > \theta$) are inserted into an in-kernel blocklist (`ahhs_blocklist`) with a 60-second TTL in **$< 1\text{ }\mu\text{s}$**, ensuring **0 attack packets breach the host**.
+- **Immediate In-Kernel Quarantine**: Anomalous flows ($\text{err} > \theta$) are inserted into an in-kernel blocklist (`ahhs_blocklist`) with a 60-second TTL in **$< 1\text{ }\mu\text{s}$**, guaranteeing line-rate dropping with **zero attack packet leakage once quarantined** across the active session.
 
 
 
@@ -51,9 +51,9 @@ Trained and evaluated on **12,100 held-out windows (1,210,000 packets)** from th
 | **Wednesday DoS Slowloris Detection Rate** | **`70.14%`** | **3,507 / 5,000** attack windows caught (AUC: 0.9135) |
 | **Multi-Tier ROC-AUC** | **`0.9567`** | Near-optimal separation across all attack classes |
 | **Benign False Positive Rate (FPR)** | **`9.81%`** | Evaluated on unseen Monday benign traffic |
-| **Single-Core Line Throughput** | **`60.7 Mpps`** | **$50.6\times$ higher than Monolithic Kernel ML** |
+| **Single-Core Line Throughput** | **`60.7 Mpps`** | **$50.6\times$ higher than Monolithic Kernel ML** (16.45 ns/pkt) |
 | **Amortized Ingress Latency** | **`16.45 ns`** | Fully sustains 40G/100G wire-speed processing |
-| **Attack Exposure Lag** | **$< 1\text{ }\mu\text{s}$** | **0 packets leak** after window evaluation |
+| **Attack Exposure Lag** | **$< 1\text{ }\mu\text{s}$** | **Immediate line-rate quarantine** across active session |
 | **Kernel Bit-Exact Parity** | **`240 / 240 (100%)`** | Golden trace vectors verified inside Linux 6.8 kernel |
 | **In-Kernel Memory Allocation** | **`7.2 MB`** | 100% fits within CPU L3 cache ($<0.1\%$ system RAM) |
 | **BPF Verifier Complexity** | **`< 600 insns`** | Safe against 1,000,000 BPF instruction limit |
@@ -159,7 +159,7 @@ ebpf/
 │   ├── test_phase3_quality.py               # 20-test CIC-IDS-2017 quality regression suite
 │   ├── run_selftest.py                      # 240 golden vector bit-exact verification harness
 │   ├── ref_int_forward.py                   # Bit-identical integer reference forward pass
-│   └── ahhs_features.py                     # Fixed-point feature extractor & simulator
+│   └── ahhs_features.py                     # Fixed-point feature extractor & verification pipeline
 │
 ├── models/                                  # Model Binaries, Golden Traces & Checkpoints
 │   ├── ahhs_model.bin                       # 592-byte in-kernel model binary (CIC-IDS-2017, theta=58)
@@ -299,7 +299,7 @@ sudo bpftool map dump name ahhs_t3_stats
 sudo bpftool map dump name ahhs_blocklist
 ```
 
-*(Because the flood exceeds $\theta = 58$, Tier 3 marks `ANOMALY`, drops the packet, and writes the flow key `127.0.0.1:40000 -> 8080` to `ahhs_blocklist` with a 60-second TTL. Subsequent packets are dropped immediately in ~12 ns at Tier 1 fast-path).*
+*(Because the flood exceeds $\theta = 58$, Tier 3 identifies the ANOMALY, drops the packet, and inserts the flow key `127.0.0.1:40000 -> 8080` into `ahhs_blocklist` with a 60-second TTL. Subsequent packets are dropped at wire speed (~11.8 ns) at the Tier 1 ingress fast-path).*
 
 ---
 

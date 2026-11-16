@@ -111,7 +111,7 @@ struct ahhs_model {
 };
 _Static_assert(sizeof(struct ahhs_model) == 592, "ahhs_model layout mismatch");
 
-/* Per-CPU scratch: carries state across tail calls (fixes G2). */
+/* Per-CPU scratch: carries state across tail-call layers */
 struct ahhs_scratch {
     struct flow_key key;                            /*  16 */
     __u8   feat[AHHS_N_IN];                         /*   8 */
@@ -141,7 +141,7 @@ struct {
     __type(value, struct flow_state);
 } flow_lru_map SEC(".maps") __weak;
 
-/* Tier 3 tail-call program array — 4 layers (fixes G3) */
+/* Tier 3 tail-call program array — 4 chained neural network layers */
 struct {
     __uint(type, BPF_MAP_TYPE_PROG_ARRAY);
     __uint(max_entries, AHHS_T3_N);
@@ -149,7 +149,7 @@ struct {
     __type(value, __u32);
 } ahhs_t3_prog_array SEC(".maps") __weak;
 
-/* Per-CPU scratch for inter-layer data (fixes G2) */
+/* Per-CPU scratch for inter-layer data exchange */
 struct {
     __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
     __uint(max_entries, 1);
@@ -173,7 +173,7 @@ struct {
     __type(value, __u32);
 } ahhs_nn_index SEC(".maps") __weak;
 
-/* Flow blocklist: anomalous flows are blocked for BLOCK_TTL_NS (fixes G5) */
+/* Flow blocklist: anomalous flows are quarantined for BLOCK_TTL_NS */
 struct {
     __uint(type, BPF_MAP_TYPE_LRU_HASH);
     __uint(max_entries, 16384);
